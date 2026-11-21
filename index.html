@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Varal Acervo — Gestão de Camisas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f2f4f0;
+    --surface: #ffffff;
+    --surface2: #f7f8f5;
+    --surface3: #eef0eb;
+    --border: #dde0d8;
+    --border2: #c8ccc2;
+    --text: #1a1f18;
+    --text2: #5a6357;
+    --text3: #9aa395;
+    --green: #1a6b35;
+    --green-dim: #1a6b3518;
+    --red: #c0392b;
+    --red-dim: #c0392b18;
+    --yellow: #b07d00;
+    --yellow-dim: #b07d0018;
+    --blue: #1a4fa0;
+    --blue-dim: #1a4fa018;
+    --accent: #1a6b35;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  /* LAYOUT */
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+  header { 
+    background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: 0 1px 8px rgba(0,0,0,.06);
+    padding: 0 32px; display: flex; align-items: center; justify-content: space-between;
+    height: 68px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; color: var(--green); white-space: nowrap; flex-shrink: 0; margin-right: 16px; }
+  .nav-btn, .add-btn, .add-btn-secondary { white-space: nowrap; }
+  @media (max-width: 1360px) {
+    header { padding: 0 20px; }
+    .nav-btn { padding: 8px 10px; }
+    .add-btn, .add-btn-secondary { padding: 9px 11px; }
+  }
+  nav { display: flex; gap: 4px; }
+  .nav-btn {
+    background: none; border: none; color: var(--text2); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 6px; cursor: pointer;
+    transition: all .2s; letter-spacing: .5px;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: var(--green-dim); color: var(--green); }
+  .add-btn {
+    background: var(--green); color: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 6px; border: none;
+    cursor: pointer; transition: all .2s; letter-spacing: .5px;
+  }
+  .add-btn:hover { background: #145228; }
+  .add-btn-secondary {
+    background: var(--surface2); color: var(--text2); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500; padding: 9px 16px; border-radius: 6px;
+    border: 1px solid var(--border2); cursor: pointer; transition: all .2s; letter-spacing: .5px;
+  }
+  .add-btn-secondary:hover { border-color: var(--yellow); color: var(--yellow); background: var(--yellow-dim); }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  main { flex: 1; padding: 32px; max-width: 1400px; margin: 0 auto; width: 100%; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* DASHBOARD */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 24px; position: relative; overflow: hidden;
+  }
+  .kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+  .kpi.green::before { background: var(--green); }
+  .kpi.red::before { background: var(--red); }
+  .kpi.yellow::before { background: var(--yellow); }
+  .kpi.blue::before { background: var(--blue); }
+  .kpi-label { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text2); margin-bottom: 8px; }
+  .kpi-value { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 1px; line-height: 1; }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.red { color: var(--red); }
+  .kpi-value.yellow { color: var(--yellow); }
+  .kpi-value.blue { color: var(--blue); }
+  .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 6px; font-family: 'DM Mono', monospace; }
+
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
+  .dash-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px;
+  }
+  .dash-card h3 { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text2); margin-bottom: 20px; font-weight: 500; }
+  
+  /* Canal breakdown */
+  .canal-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .canal-name { font-size: 13px; color: var(--text); width: 120px; flex-shrink: 0; }
+  .canal-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .canal-bar { height: 100%; background: var(--green); border-radius: 3px; transition: width .5s; }
+  .canal-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text2); width: 50px; text-align: right; }
+
+  /* Status breakdown */
+  .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .status-chip {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .status-chip .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+  .status-chip .name { font-size: 12px; color: var(--text2); display: flex; align-items: center; }
+  .status-chip .count { font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 500; }
+
+  /* Top items */
+  .top-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .top-row:last-child { border-bottom: none; }
+  .top-row .item-name { font-size: 13px; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 12px; }
+  .top-row .lucro { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; }
+
+  /* INVENTORY TABLE */
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .search-wrap { position: relative; flex: 1; max-width: 360px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); }
+  .search-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 9px 12px 9px 36px; outline: none; transition: border .2s;
+  }
+  .search-input:focus { border-color: var(--green); }
+  .filter-select {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 9px 12px; outline: none; cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--green); }
+  .count-badge { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; margin-left: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text3); padding: 0 12px 12px; font-weight: 500; border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th.sort { cursor: pointer; user-select: none; }
+  thead th.sort:hover { color: var(--text2); }
+  tbody tr {
+    border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s;
+  }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 12px; font-size: 13px; vertical-align: middle; }
+  td.item-name { font-weight: 500; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  .badge {
+    display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px;
+    font-weight: 500; letter-spacing: .5px;
+  }
+  .badge-estoque { background: var(--blue-dim); color: var(--blue); }
+  .badge-enviado { background: var(--green-dim); color: var(--green); }
+  .badge-logistica { background: var(--yellow-dim); color: var(--yellow); }
+  .badge-vendedor { background: #ff980022; color: #ff9800; }
+  .badge-patrimonio { background: #9c27b022; color: #ce93d8; }
+
+  .lucro-pos { color: var(--green); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .lucro-neg { color: var(--red); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .lucro-na { color: var(--text3); font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  /* TROCAS */
+  .troca-chip {
+    display:flex; align-items:center; gap:10px; background:var(--surface2);
+    border:1px solid var(--border); border-radius:10px; padding:10px 12px; cursor:pointer;
+    transition:border .15s;
+  }
+  .troca-chip:hover { border-color: var(--green); }
+  .troca-chip .tc-icon { font-size:15px; color:var(--green); flex-shrink:0; }
+  .troca-chip .tc-main { flex:1; min-width:0; }
+  .troca-chip .tc-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .troca-chip .tc-sub { font-size:11px; color:var(--text3); margin-top:2px; }
+  .troca-chip .tc-val { font-family:'DM Mono',monospace; font-size:12px; color:var(--green); white-space:nowrap; }
+  .troca-chip .tc-x {
+    background:none; border:none; color:var(--text3); cursor:pointer; font-size:14px; padding:2px 4px; line-height:1;
+  }
+  .troca-chip .tc-x:hover { color: var(--red); }
+  .troca-tag {
+    display:inline-flex; align-items:center; gap:6px; background:var(--green-dim); color:var(--green);
+    border:1px solid var(--green); border-radius:999px; padding:5px 12px; font-size:12px; font-weight:500;
+    cursor:pointer; margin-bottom:20px;
+  }
+  .troca-resumo {
+    margin-top:12px; background:var(--surface2); border-radius:10px; padding:12px 14px;
+    font-size:12px; color:var(--text2); display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline;
+  }
+  .troca-resumo b { font-family:'DM Mono',monospace; color:var(--text); font-weight:500; }
+  .inv-troca { font-size:11px; color:var(--green); margin-top:2px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8);
+    z-index: 200; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2); border-radius: 16px;
+    width: 640px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    padding: 32px; position: relative;
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; }
+  .modal-close {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text2); width: 32px; height: 32px; cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+  }
+  .modal-close:hover { background: var(--red-dim); color: var(--red); border-color: var(--red); }
+
+  .form-section { margin-bottom: 24px; }
+  .form-section-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; font-weight: 500; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 11px; letter-spacing: .5px; color: var(--text2); font-weight: 500; }
+  input, select, textarea {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+    padding: 10px 12px; outline: none; transition: border .2s; width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--green); }
+  input[type="date"] { color-scheme: light; }
+
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid var(--border); }
+  .btn-cancel {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all .2s;
+  }
+  .btn-cancel:hover { border-color: var(--border2); color: var(--text); }
+  .btn-save {
+    background: var(--green); color: #fff; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; padding: 10px 24px; border-radius: 8px; border: none;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-save:hover { background: #00ff85; }
+  .btn-delete {
+    background: var(--red-dim); border: 1px solid var(--red); color: var(--red);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all .2s; margin-right: auto;
+  }
+  .btn-delete:hover { background: var(--red); color: #fff; }
+
+  /* Detail panel inline */
+  .detail-row { background: var(--surface2) !important; }
+  .detail-panel { padding: 16px 24px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .detail-item .dl { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+  .detail-item .dv { font-size: 13px; font-family: 'DM Mono', monospace; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 80px 20px; color: var(--text3); }
+  .empty svg { margin-bottom: 16px; opacity: .3; }
+  .empty p { font-size: 14px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 32px; right: 32px; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: 10px; padding: 14px 20px;
+    font-size: 13px; z-index: 300; transform: translateY(80px); opacity: 0;
+    transition: all .3s; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  /* Pagination */
+  .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 24px 0 0; }
+  .page-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text2);
+    width: 34px; height: 34px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; transition: all .2s;
+    font-family: 'DM Mono', monospace;
+  }
+  .page-btn:hover, .page-btn.active { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+  .page-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .dash-grid { grid-template-columns: 1fr; }
+    main { padding: 16px; }
+  }
+
+  /* MONTHLY CHART */
+  .chart-wrap { display: flex; align-items: flex-end; gap: 6px; padding-top: 8px; }
+  .chart-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 4px; }
+  .chart-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+  .chart-bar { width: 100%; border-radius: 4px 4px 0 0; transition: height .5s cubic-bezier(.4,0,.2,1); min-height: 2px; position: relative; cursor: default; }
+  .chart-bar:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--surface3); border: 1px solid var(--border2); border-radius: 6px; padding: 5px 9px; font-size: 11px; font-family: 'DM Mono', monospace; white-space: nowrap; color: var(--text); z-index: 10; }
+  .chart-label { font-size: 9px; color: var(--text3); font-family: 'DM Mono', monospace; text-align: center; letter-spacing: .5px; }
+  .chart-val { font-size: 9px; font-family: 'DM Mono', monospace; text-align: center; }
+
+  /* ALERT CARD */
+  .alert-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s; }
+  .alert-item:hover { border-color: var(--red); border-left-color: var(--red); }
+  .alert-item .ai-name { font-size: 13px; font-weight: 500; }
+  .alert-item .ai-days { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--red); }
+  .alert-item .ai-val { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text3); }
+
+  /* TOOLBAR EXTRAS */
+  .toolbar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .toolbar-actions { display: flex; gap: 8px; margin-left: auto; }
+  .icon-btn {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text2);
+    font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 8px 14px; border-radius: 7px; cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .icon-btn:hover { border-color: var(--border2); color: var(--text); }
+  .icon-btn.green:hover { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .btn-duplicate {
+    background: var(--blue-dim); border: 1px solid var(--blue); color: var(--blue);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: all .2s; margin-right: auto;
+  }
+  .btn-duplicate:hover { background: var(--blue); color: #fff; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">VARAL ACERVO</div>
+    <nav>
+      <button class="nav-btn active" onclick="showView('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showView('inventory')">Inventário</button>
+      <button class="nav-btn" onclick="showView('relatorios')">Relatórios</button>
+      <button class="nav-btn" onclick="showView('metas')">Metas</button>
+      <button class="nav-btn" onclick="showView('gastos')">Gastos</button>
+    </nav>
+    <div class="header-actions">
+      <button class="add-btn-secondary" onclick="openSettings()" title="Configurações da loja">⚙ Config</button>
+      <button class="add-btn-secondary" onclick="exportBackup()" title="Exportar todos os dados como backup">↓ Backup</button>
+      <label class="add-btn-secondary" style="cursor:pointer" title="Restaurar dados de um backup">
+        ↑ Importar
+        <input type="file" accept=".json" onchange="importBackup(event)" style="display:none">
+      </label>
+      <button class="add-btn-secondary" onclick="openGastoModal()">+ Gasto Operacional</button>
+      <button class="add-btn" onclick="openModal()">+ Nova Peça</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="kpi-grid" id="kpi-grid"></div>
+      <!-- Extra KPIs row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px" id="kpi2-grid"></div>
+      <div class="dash-grid">
+        <div class="dash-card" style="grid-column: 1 / -1">
+          <h3>Evolução Mensal de Lucro</h3>
+          <div class="chart-wrap" id="monthly-chart"></div>
+        </div>
+        <div class="dash-card" style="grid-column: 1 / -1">
+          <h3>Vendas por Canal</h3>
+          <div id="canal-chart"></div>
+        </div>
+        <div class="dash-card" style="grid-column: 1 / -1">
+          <h3>Status do Inventário</h3>
+          <div id="status-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px"></div>
+        </div>
+        <div class="dash-card" style="display:flex;flex-direction:column">
+          <h3>Top 10 — Maior Lucro</h3>
+          <div id="top-lucro" style="flex:1"></div>
+        </div>
+        <div class="dash-card" style="display:flex;flex-direction:column">
+          <h3>Compradas Recentemente (sem venda)</h3>
+          <div id="recent-estoque" style="flex:1"></div>
+        </div>
+        <div class="dash-card" style="grid-column: 1 / -1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <h3 style="margin-bottom:0">⚠ Peças Paradas (+60 dias)</h3>
+            <select id="alert-days-select" onchange="renderDashboard()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 8px;outline:none;cursor:pointer">
+              <option value="30">30 dias</option>
+              <option value="60" selected>60 dias</option>
+              <option value="90">90 dias</option>
+            </select>
+          </div>
+          <div id="alert-list"></div>
+        </div>
+        <div class="dash-card" style="grid-column: 1 / -1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <div>
+              <h3 style="margin-bottom:4px">Gastos Operacionais por Mês</h3>
+              <div style="font-size:11px;color:var(--text3)">Passe o mouse nas barras para detalhes · <span style="color:var(--accent);cursor:pointer;text-decoration:underline" onclick="showView('gastos')">Ver análise completa →</span></div>
+            </div>
+            <div style="display:flex;gap:16px;align-items:center">
+              <div style="text-align:right">
+                <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">Mês Atual</div>
+                <div id="dash-gastos-mes" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--yellow)">—</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">Total Acumulado</div>
+                <div id="dash-gastos-total" style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--text2)">—</div>
+              </div>
+            </div>
+          </div>
+          <div id="dash-gastos-chart" style="display:flex;gap:6px;align-items:flex-end;padding-top:4px;width:100%;height:120px"></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)" id="dash-gastos-categorias"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="view-inventory" class="view">
+      <div class="toolbar-row">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" class="search-input" id="search-input" placeholder="Buscar peça..." oninput="filterInventory()">
+        </div>
+        <select class="filter-select" id="filter-status" onchange="filterInventory()">
+          <option value="">Todos os status</option>
+          <option value="Estoque">Estoque</option>
+          <option value="Enviado">Enviado</option>
+          <option value="Logística">Logística</option>
+          <option value="Com o vendedor">Com o vendedor</option>
+        </select>
+        <select class="filter-select" id="filter-venda" onchange="filterInventory()">
+          <option value="">Todas</option>
+          <option value="vendido">Vendidas</option>
+          <option value="nao-vendido">Não vendidas</option>
+        </select>
+        <select class="filter-select" id="filter-tamanho" onchange="filterInventory()">
+          <option value="">Tamanho</option>
+          <option value="PP">PP</option>
+          <option value="P">P</option>
+          <option value="M">M</option>
+          <option value="G">G</option>
+          <option value="GG">GG</option>
+          <option value="XGG">XGG</option>
+        </select>
+        <input type="number" class="filter-select" id="filter-ano" placeholder="Ano" min="1900" max="2099" oninput="filterInventory()" style="width:90px">
+        <div class="toolbar-actions">
+          <button class="icon-btn green" onclick="exportExcel()">⬇ Excel</button>
+          <span class="count-badge" id="count-badge"></span>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="sort" onclick="sortBy('item')">Peça ↕</th>
+            <th class="sort" onclick="sortBy('dataCompra')">Compra ↕</th>
+            <th class="sort" onclick="sortBy('paguei')">Custo ↕</th>
+            <th>Expectativa</th>
+            <th class="sort" onclick="sortBy('dataVenda')">Venda ↕</th>
+            <th>Canal</th>
+            <th class="sort" onclick="sortBy('vendaLiquida')">V. Líquida ↕</th>
+            <th class="sort" onclick="sortBy('lucro')">Lucro ↕</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-body"></tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- RELATÓRIOS -->
+    <div id="view-relatorios" class="view">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text)">RELATÓRIOS</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Análise detalhada por período</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <select id="rel-ano" onchange="renderRelatorios()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 12px;outline:none;cursor:pointer"></select>
+          <button onclick="exportRelatorio()" style="background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;border:none;cursor:pointer">↓ Exportar Excel</button>
+        </div>
+      </div>
+      <!-- KPIs do ano -->
+      <div id="rel-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px"></div>
+      <!-- Tabela mensal -->
+      <div class="dash-card" style="margin-bottom:20px">
+        <h3>Resumo Mensal</h3>
+        <table id="rel-table" style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Mês</th>
+              <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Vendas</th>
+              <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Receita</th>
+              <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Custo</th>
+              <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Lucro Bruto</th>
+              <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Margem</th>
+              <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Gastos Op.</th>
+              <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Lucro Líquido</th>
+            </tr>
+          </thead>
+          <tbody id="rel-tbody"></tbody>
+        </table>
+      </div>
+      <!-- Ranking de peças -->
+      <div class="dash-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <h3 style="margin-bottom:0">Ranking de Peças — Maior Lucro no Período</h3>
+          <select id="rel-ranking-mes" onchange="renderRelatorios()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 8px;outline:none;cursor:pointer">
+            <option value="">Ano todo</option>
+          </select>
+        </div>
+        <div id="rel-ranking"></div>
+      </div>
+    </div>
+
+    <!-- METAS -->
+    <div id="view-metas" class="view">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text);margin-bottom:8px">METAS</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:28px">Acompanhe seu progresso mensal</div>
+      <!-- Definir meta -->
+      <div class="dash-card" style="max-width:480px;margin-bottom:28px">
+        <h3>Definir Meta de Lucro Mensal</h3>
+        <div style="display:flex;gap:12px;align-items:flex-end">
+          <div style="flex:1">
+            <label style="font-size:11px;letter-spacing:.5px;color:var(--text2);font-weight:500;display:block;margin-bottom:6px">Mês / Ano</label>
+            <input type="month" id="meta-mes" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 12px;outline:none;width:100%;color-scheme:light">
+          </div>
+          <div style="flex:1">
+            <label style="font-size:11px;letter-spacing:.5px;color:var(--text2);font-weight:500;display:block;margin-bottom:6px">Meta de Lucro (R$)</label>
+            <input type="number" id="meta-valor" min="0" step="100" placeholder="ex: 3000" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 12px;outline:none;width:100%">
+          </div>
+          <button onclick="salvarMeta()" style="background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap">Salvar Meta</button>
+        </div>
+      </div>
+      <!-- Cards de progresso -->
+      <div id="metas-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px"></div>
+    </div>
+    <!-- GASTOS -->
+    <div id="view-gastos" class="view">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text)">GASTOS OPERACIONAIS</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Controle de custos por período e categoria</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <select id="gastos-ano-sel" onchange="renderGastos()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 12px;outline:none;cursor:pointer"></select>
+          <button onclick="openGastoModal()" style="background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;border:none;cursor:pointer">+ Novo Gasto</button>
+        </div>
+      </div>
+
+      <!-- KPIs de gastos -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px" id="gastos-kpis"></div>
+
+      <!-- Gráfico mensal de gastos -->
+      <div class="dash-card" style="margin-bottom:20px">
+        <h3>Evolução Mensal de Gastos</h3>
+        <div id="gastos-chart-full" style="display:flex;gap:6px;align-items:flex-end;padding-top:4px;width:100%;height:140px"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <!-- Breakdown por categoria -->
+        <div class="dash-card">
+          <h3>Gastos por Categoria</h3>
+          <div id="gastos-cat-breakdown"></div>
+        </div>
+        <!-- Top gastos do período -->
+        <div class="dash-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <h3 style="margin-bottom:0">Maiores Gastos do Período</h3>
+            <select id="gastos-mes-sel" onchange="renderGastos()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 8px;outline:none;cursor:pointer">
+              <option value="">Ano todo</option>
+            </select>
+          </div>
+          <div id="gastos-top-list"></div>
+        </div>
+      </div>
+
+      <!-- Lista completa de gastos -->
+      <div class="dash-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin-bottom:0">Todos os Lançamentos</h3>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="gastos-filtro-cat" onchange="renderGastosLista()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:6px 10px;outline:none;cursor:pointer">
+              <option value="">Todas as categorias</option>
+              <option value="Embalagem">Embalagem</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Ferramentas">Ferramentas</option>
+              <option value="Personalizações">Personalizações</option>
+              <option value="Outros">Outros</option>
+            </select>
+            <select id="gastos-filtro-mes" onchange="renderGastosLista()" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:6px 10px;outline:none;cursor:pointer">
+              <option value="">Todos os meses</option>
+            </select>
+            <span id="gastos-count" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace"></span>
+          </div>
+        </div>
+        <div id="gastos-lista-completa"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nova Peça</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <form id="item-form" onsubmit="saveItem(event)">
+      <div id="troca-origem-tag"></div>
+      <div class="form-section">
+        <div class="form-section-title">Identificação</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Nome da Peça *</label>
+            <input type="text" id="f-item" placeholder="ex: Camisa Grêmio" required>
+          </div>
+          <div class="form-group">
+            <label>Ano</label>
+            <input type="number" id="f-ano" min="1900" max="2099" placeholder="ex: 1995">
+          </div>
+          <div class="form-group">
+            <label>Tamanho</label>
+            <select id="f-tamanho">
+              <option value="">—</option>
+              <option value="PP">PP</option>
+              <option value="P">P</option>
+              <option value="M">M</option>
+              <option value="G">G</option>
+              <option value="GG">GG</option>
+              <option value="XGG">XGG</option>
+              <option value="Único">Único</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status / Localização</label>
+            <select id="f-ondeEsta">
+              <option value="Estoque">Estoque</option>
+              <option value="Com o vendedor">Com o vendedor</option>
+              <option value="Logística">Logística</option>
+              <option value="Enviado">Enviado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Código de Rastreio</label>
+            <input type="text" id="f-rastreio" placeholder="opcional">
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Compra</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Data da Compra</label>
+            <input type="date" id="f-dataCompra">
+          </div>
+          <div class="form-group">
+            <label>Data do Recebimento</label>
+            <input type="date" id="f-dataRecebimento">
+          </div>
+          <div class="form-group">
+            <label>Quanto Paguei (R$) *</label>
+            <input type="number" id="f-paguei" step="0.01" min="0" placeholder="0.00" required>
+          </div>
+          <div class="form-group">
+            <label>Expectativa de Venda (R$)</label>
+            <input type="number" id="f-expectativaVenda" step="0.01" min="0" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Venda (preencher quando vender)</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Data do Anúncio</label>
+            <input type="date" id="f-dataAnuncio">
+          </div>
+          <div class="form-group">
+            <label>Data da Venda</label>
+            <input type="date" id="f-dataVenda" onchange="updateTrocaSection()" oninput="updateTrocaSection()">
+          </div>
+          <div class="form-group">
+            <label>Canal de Venda</label>
+            <select id="f-canalVenda">
+              <option value="">—</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Enjoei">Enjoei</option>
+              <option value="Whatsapp">Whatsapp</option>
+              <option value="Meiuka">Meiuka</option>
+              <option value="Dado em troca">Dado em troca</option>
+            </select>
+          </div>
+          <div class="form-group"></div>
+          <div class="form-group">
+            <label id="lbl-vendaBruta">Venda Bruta (R$)</label>
+            <input type="number" id="f-vendaBruta" step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label id="lbl-vendaLiquida">Venda Líquida (R$)</label>
+            <input type="number" id="f-vendaLiquida" step="0.01" min="0" placeholder="0.00" oninput="renderTrocaSection()">
+          </div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO DE TROCAS -->
+      <div class="form-section" id="troca-section" style="display:none">
+        <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Camisas Recebidas em Troca</span>
+          <button type="button" onclick="openTrocaModal()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;letter-spacing:.5px">+ Adicionar Camisa</button>
+        </div>
+        <div id="troca-list" style="display:flex;flex-direction:column;gap:8px;margin-top:4px"></div>
+        <div id="troca-empty" style="font-size:12px;color:var(--text3);padding:4px 0">Recebeu camisas como parte do pagamento? Adicione cada uma com o valor pelo qual você a pegou.</div>
+        <div id="troca-resumo"></div>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button class="btn-delete" id="btn-delete" style="display:none" onclick="deleteItem()">Excluir</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CAMISA RECEBIDA EM TROCA -->
+<div class="modal-overlay" id="troca-modal">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="troca-modal-title">Camisa Recebida em Troca</div>
+      <button class="modal-close" onclick="closeTrocaModal()">✕</button>
+    </div>
+    <div id="troca-modal-origem" style="font-size:12px;color:var(--text2);margin:-14px 0 22px"></div>
+    <div class="form-section">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nome da Peça *</label>
+          <input type="text" id="t-item" placeholder="ex: Camisa Inter 2006">
+        </div>
+        <div class="form-group">
+          <label>Ano</label>
+          <input type="number" id="t-ano" min="1900" max="2099" placeholder="ex: 2006">
+        </div>
+        <div class="form-group">
+          <label>Tamanho</label>
+          <select id="t-tamanho">
+            <option value="">—</option>
+            <option value="PP">PP</option><option value="P">P</option><option value="M">M</option>
+            <option value="G">G</option><option value="GG">GG</option><option value="XGG">XGG</option>
+            <option value="Único">Único</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor pego na troca (R$) *</label>
+          <input type="number" id="t-valor" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Expectativa de Venda (R$)</label>
+          <input type="number" id="t-expectativa" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="form-group full">
+          <label>Status / Localização</label>
+          <select id="t-ondeEsta">
+            <option value="Estoque">Estoque</option>
+            <option value="Com o vendedor">Com o vendedor</option>
+            <option value="Logística">Logística</option>
+          </select>
+        </div>
+      </div>
+      <div id="troca-modal-sugestao" style="font-size:12px;color:var(--text3);margin-top:12px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeTrocaModal()">Cancelar</button>
+      <button class="btn-save" onclick="confirmTroca()">Adicionar à venda</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal" style="width:580px">
+    <div class="modal-header">
+      <div class="modal-title">Configurações</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <!-- Nome da loja -->
+    <div class="form-section">
+      <div class="form-section-title">Identidade</div>
+      <div class="form-group">
+        <label>Nome da Loja</label>
+        <input type="text" id="cfg-nome-loja" placeholder="ex: VARAL ACERVO" maxlength="32">
+      </div>
+    </div>
+
+    <!-- Canais de venda -->
+    <div class="form-section">
+      <div class="form-section-title">Canais de Venda</div>
+      <div id="cfg-canais-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="cfg-novo-canal" placeholder="Novo canal (ex: OLX)" style="flex:1">
+        <button onclick="adicionarCanal()" style="background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap">+ Adicionar</button>
+      </div>
+    </div>
+
+    <!-- Categorias de gastos -->
+    <div class="form-section" style="margin-bottom:0">
+      <div class="form-section-title">Categorias de Gastos Operacionais</div>
+      <div id="cfg-cats-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="cfg-nova-cat" placeholder="Nova categoria (ex: Frete)">
+        <button onclick="adicionarCategoria()" style="background:var(--green);color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 16px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap">+ Adicionar</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeSettings()">Cancelar</button>
+      <button class="btn-save" onclick="saveSettings()">Salvar Configurações</button>
+    </div>
+  </div>
+</div>
+
+<!-- GASTO MODAL -->
+<div class="modal-overlay" id="gasto-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="gasto-modal-title">Novo Gasto Operacional</div>
+      <button class="modal-close" onclick="closeGastoModal()">✕</button>
+    </div>
+    <div class="form-section" style="margin-bottom:0">
+      <div class="form-section-title">Detalhes do Gasto</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Descrição *</label>
+          <input type="text" id="g-descricao" placeholder="ex: Caixas de papelão, Etiquetas...">
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <select id="g-categoria">
+            <option value="Embalagem">Embalagem</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Ferramentas">Ferramentas</option>
+            <option value="Personalizações">Personalizações</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="g-data">
+        </div>
+        <div class="form-group full">
+          <label>Valor (R$) *</label>
+          <input type="number" id="g-valor" step="0.01" min="0" placeholder="0.00">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-delete" id="g-btn-delete" style="display:none" onclick="deleteGasto()">Excluir</button>
+      <button class="btn-cancel" onclick="closeGastoModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveGasto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.7);z-index:500;align-items:center;justify-content:center;flex-direction:column;gap:12px;backdrop-filter:blur(2px)">
+  <div style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite"></div>
+  <div id="loading-msg" style="font-size:13px;color:var(--text2);font-family:'DM Mono',monospace"></div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+//  CONEXÃO COM O SUPABASE — cole aqui os dados do SEU projeto
+//  (Supabase → Project Settings → API Keys / Data API)
+//  Troque só o texto entre as aspas. Não apague as aspas nem o ponto e vírgula.
+// ══════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'COLE_AQUI_A_PROJECT_URL';
+const SUPABASE_KEY = 'COLE_AQUI_A_PUBLISHABLE_KEY';
+const SUPABASE_CONFIGURADO = !SUPABASE_URL.startsWith('COLE_AQUI') && !SUPABASE_KEY.startsWith('COLE_AQUI');
+
+let editingId = null;
+let editingGastoId = null;
+let _trocaRows = []; // [{nome, ano, tamanho, expectativa}]
+let sortField = 'dataCompra';
+let sortAsc = false;
+let currentPage = 1;
+const PER_PAGE = 25;
+
+// ── SUPABASE HELPERS ──────────────────────────────────────────────────────────
+async function sbGet(table) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=*&order=id`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbUpsert(table, row) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation'
+    },
+    body: JSON.stringify(row)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbDelete(table, id) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+// ── MAPEAMENTO camelCase ↔ snake_case ─────────────────────────────────────────
+function pecaToRow(d) {
+  return {
+    id: d.id, item: d.item, ano: d.ano||null, tamanho: d.tamanho||null,
+    onde_esta: d.ondeEsta||null, rastreio: d.rastreio||null,
+    data_compra: d.dataCompra||null, data_recebimento: d.dataRecebimento||null,
+    paguei: d.paguei!=null?d.paguei:null,
+    expectativa_venda: d.expectativaVenda||null,
+    data_anuncio: d.dataAnuncio||null, data_venda: d.dataVenda||null,
+    canal_venda: d.canalVenda||null,
+    // No banco fica só o valor em DINHEIRO; o valor das trocas é somado na leitura (aplicarTrocas)
+    venda_bruta: ('vendaBrutaDinheiro' in d ? d.vendaBrutaDinheiro : d.vendaBruta) ?? null,
+    venda_liquida: ('vendaDinheiro' in d ? d.vendaDinheiro : d.vendaLiquida) ?? null,
+    // só envia o vínculo quando existe, para não quebrar gravações se a coluna ainda não foi criada
+    ...(d.trocaDe ? { troca_de: d.trocaDe } : {}),
+  };
+}
+function rowToPeca(r) {
+  return {
+    id: r.id, item: r.item, ano: r.ano, tamanho: r.tamanho,
+    ondeEsta: r.onde_esta, rastreio: r.rastreio,
+    dataCompra: r.data_compra, dataRecebimento: r.data_recebimento,
+    paguei: r.paguei, expectativaVenda: r.expectativa_venda,
+    dataAnuncio: r.data_anuncio, dataVenda: r.data_venda,
+    canalVenda: r.canal_venda, vendaBruta: r.venda_bruta, vendaLiquida: r.venda_liquida,
+    trocaDe: r.troca_de || null,
+  };
+}
+function gastoToRow(g) {
+  return { id: g.id, descricao: g.descricao, categoria: g.categoria||null, data: g.data||null, valor: g.valor!=null?g.valor:null };
+}
+
+// INITIAL DATA
+const INITIAL_DATA = []; // sistema começa vazio
+
+// ── CACHE em memória ─────────────────────────────────────────────────────────
+let _pecasCache = null;
+let _gastosCache = null;
+
+// Soma o valor das camisas recebidas em troca na venda da peça original.
+// vendaDinheiro / vendaBrutaDinheiro guardam o que está no banco (só dinheiro);
+// vendaLiquida / vendaBruta passam a ser o TOTAL (dinheiro + trocas), usado em todos os cálculos.
+function aplicarTrocas(list) {
+  const porOrigem = {};
+  list.forEach(d => { if (d.trocaDe) (porOrigem[d.trocaDe] = porOrigem[d.trocaDe] || []).push(d); });
+  list.forEach(d => {
+    d.vendaDinheiro = d.vendaLiquida;
+    d.vendaBrutaDinheiro = d.vendaBruta;
+    d.trocasRecebidas = porOrigem[d.id] || [];
+    d.valorTrocas = d.trocasRecebidas.reduce((s, t) => s + (t.paguei || 0), 0);
+    if (d.trocasRecebidas.length) {
+      d.vendaLiquida = (d.vendaDinheiro || 0) + d.valorTrocas;
+      if (d.vendaBruta != null) d.vendaBruta = d.vendaBruta + d.valorTrocas;
+    }
+    const origem = d.trocaDe ? list.find(o => o.id === d.trocaDe) : null;
+    d.origemTrocaNome = origem ? origem.item : null;
+  });
+  return list;
+}
+
+async function getData() {
+  if (_pecasCache) return _pecasCache;
+  try {
+    const rows = await sbGet('pecas');
+    _pecasCache = aplicarTrocas(rows.map(rowToPeca));
+    // Se banco vazio, faz seed dos dados iniciais
+    if (_pecasCache.length === 0) {
+      showToast('Importando dados iniciais para o banco...', 'success');
+      const seeded = INITIAL_DATA.filter(d => d.ondeEsta !== 'Patrimônio').map((d,i) => ({...d, id: 'seed_'+i}));
+      for (const p of seeded) { await sbUpsert('pecas', pecaToRow(p)); }
+      _pecasCache = seeded;
+    }
+  } catch(e) {
+    console.error('Erro ao buscar peças:', e);
+    _pecasCache = [];
+  }
+  return _pecasCache;
+}
+async function getGastos() {
+  if (_gastosCache) return _gastosCache;
+  try {
+    const rows = await sbGet('gastos');
+    _gastosCache = rows;
+    // Se banco vazio, faz seed dos gastos (itens Patrimônio)
+    if (_gastosCache.length === 0) {
+      const gastosSeed = INITIAL_DATA.filter(d => d.ondeEsta === 'Patrimônio').map((d,i) => ({
+        id: 'gasto_seed_'+i, descricao: d.item, categoria: 'Outros',
+        data: d.dataCompra||null, valor: d.paguei||0,
+      }));
+      for (const g of gastosSeed) { await sbUpsert('gastos', gastoToRow(g)); }
+      _gastosCache = gastosSeed;
+    }
+  } catch(e) {
+    console.error('Erro ao buscar gastos:', e);
+    _gastosCache = [];
+  }
+  return _gastosCache;
+}
+async function savePeca(peca) {
+  await sbUpsert('pecas', pecaToRow(peca));
+  _pecasCache = null; // invalida cache
+}
+async function deletePeca(id) {
+  await sbDelete('pecas', id);
+  _pecasCache = null;
+}
+async function saveGastoDB(gasto) {
+  await sbUpsert('gastos', gastoToRow(gasto));
+  _gastosCache = null;
+}
+async function deleteGastoDb(id) {
+  await sbDelete('gastos', id);
+  _gastosCache = null;
+}
+function getLucro(item) {
+  if (item.vendaLiquida != null && item.paguei != null) return item.vendaLiquida - item.paguei;
+  return null;
+}
+// Critério único de "vendido" usado em todo o sistema
+function isVendido(d) {
+  return d.dataVenda != null && d.vendaLiquida != null && d.paguei != null;
+}
+
+// VIEWS
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelector(`.nav-btn[onclick="showView('${v}')"]`).classList.add('active');
+  if (v === 'dashboard') renderDashboard();
+  if (v === 'inventory') renderInventory();
+  if (v === 'relatorios') renderRelatorios();
+  if (v === 'metas') renderMetas();
+  if (v === 'gastos') renderGastos();
+}
+function showLoading(msg) {
+  const el = document.getElementById('loading-overlay');
+  if (!el) return;
+  el.style.display = 'flex';
+  const msgEl = document.getElementById('loading-msg');
+  if (msgEl) msgEl.textContent = msg || 'Carregando...';
+}
+function hideLoading() {
+  const el = document.getElementById('loading-overlay');
+  if (!el) return;
+  el.style.display = 'none';
+}
+
+// DASHBOARD
+async function renderDashboard() {
+  const data = (await getData()).filter(d => d.ondeEsta !== 'Patrimônio');
+  const gastos = await getGastos();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const vendidos = data.filter(isVendido);
+  const emEstoque = data.filter(d => !d.dataVenda && ['Estoque','Com o vendedor','Logística'].includes(d.ondeEsta));
+
+  const lucroTotal = vendidos.reduce((s, d) => s + getLucro(d), 0);
+  const totalInvestidoEstoque = emEstoque.reduce((s,d) => s + (d.paguei||0), 0);
+  const expectativaEstoque = emEstoque.reduce((s,d) => s + (d.expectativaVenda||0), 0);
+  const totalVendas = vendidos.reduce((s,d) => s + (d.vendaLiquida||0), 0);
+  const totalGastos = gastos.reduce((s,g) => s + (g.valor||0), 0);
+  const lucroLiquido = lucroTotal - totalGastos;
+  const totalCusto = vendidos.reduce((s,d) => s+(d.paguei||0),0);
+
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const diffDays = (a, b) => Math.round((b - a) / 86400000);
+
+  // ── 1. KPI principal ──────────────────────────────────────────────────────
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi ${lucroLiquido >= 0 ? 'green' : 'red'}">
+      <div class="kpi-label">Lucro Líquido (descontando gastos)</div>
+      <div class="kpi-value ${lucroLiquido >= 0 ? 'green' : 'red'}">${fmt(lucroLiquido)}</div>
+      <div class="kpi-sub">Lucro bruto: ${fmt(lucroTotal)} · Gastos: ${fmt(totalGastos)}</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Capital em Estoque</div>
+      <div class="kpi-value blue">${fmt(totalInvestidoEstoque)}</div>
+      <div class="kpi-sub">${emEstoque.length} peças · expectativa ${fmt(expectativaEstoque)}</div>
+    </div>
+    <div class="kpi yellow">
+      <div class="kpi-label">Receita Total</div>
+      <div class="kpi-value yellow">${fmt(totalVendas)}</div>
+      <div class="kpi-sub">${vendidos.length} peças vendidas</div>
+    </div>
+    <div class="kpi ${lucroTotal >= 0 ? 'green' : 'red'}">
+      <div class="kpi-label">Margem Média (sobre custo)</div>
+      <div class="kpi-value ${lucroTotal >= 0 ? 'green' : 'red'}">${totalCusto > 0 ? (lucroTotal / totalCusto * 100).toFixed(1) : '0'}%</div>
+      <div class="kpi-sub">Custo total vendido: ${fmt(totalCusto)}</div>
+    </div>
+  `;
+
+  // ── 2. KPIs secundários: tempo médio + taxa de acerto ─────────────────────
+  const comDatas = vendidos.filter(d => d.dataRecebimento && d.dataVenda);
+  const diasParaVender = comDatas.map(d => {
+    const dr = new Date(d.dataRecebimento), dv = new Date(d.dataVenda);
+    return diffDays(dr, dv);
+  }).filter(n => n >= 0);
+  const tempoMedio = diasParaVender.length
+    ? Math.round(diasParaVender.reduce((s,n) => s+n, 0) / diasParaVender.length)
+    : null;
+
+  const comExpectativa = vendidos.filter(d => d.expectativaVenda && d.expectativaVenda > 0 && d.vendaLiquida != null);
+  const acertos = comExpectativa.filter(d => d.vendaLiquida >= d.expectativaVenda * 0.9);
+  const taxaAcerto = comExpectativa.length ? Math.round(acertos.length / comExpectativa.length * 100) : null;
+  const desvioMedio = comExpectativa.length
+    ? comExpectativa.reduce((s,d) => s + (d.vendaLiquida - d.expectativaVenda), 0) / comExpectativa.length
+    : null;
+
+  document.getElementById('kpi2-grid').innerHTML = `
+    <div class="kpi blue" style="grid-column:unset">
+      <div class="kpi-label">Tempo Médio para Vender</div>
+      <div class="kpi-value blue">${tempoMedio != null ? tempoMedio + ' dias' : '—'}</div>
+      <div class="kpi-sub">${diasParaVender.length} peças com datas completas</div>
+    </div>
+    <div class="kpi ${taxaAcerto != null && taxaAcerto >= 60 ? 'green' : 'yellow'}" style="grid-column:unset">
+      <div class="kpi-label">Taxa de Acerto na Expectativa</div>
+      <div class="kpi-value ${taxaAcerto != null && taxaAcerto >= 60 ? 'green' : 'yellow'}">${taxaAcerto != null ? taxaAcerto + '%' : '—'}</div>
+      <div class="kpi-sub">${acertos.length} de ${comExpectativa.length} peças atingiram ≥90% da expectativa${desvioMedio != null ? ' · desvio médio ' + fmt(desvioMedio) : ''}</div>
+    </div>
+    <div class="kpi ${emEstoque.filter(d => { const ref = d.dataRecebimento||d.dataCompra; return ref && diffDays(new Date(ref), today) > 60; }).length > 0 ? 'red' : 'green'}" style="grid-column:unset">
+      <div class="kpi-label">Peças Paradas (+60 dias)</div>
+      <div class="kpi-value ${emEstoque.filter(d => { const ref = d.dataRecebimento||d.dataCompra; return ref && diffDays(new Date(ref), today) > 60; }).length > 0 ? 'red' : 'green'}">
+        ${emEstoque.filter(d => { const ref = d.dataRecebimento||d.dataCompra; return ref && diffDays(new Date(ref), today) > 60; }).length}
+      </div>
+      <div class="kpi-sub">peças sem venda há mais de 60 dias</div>
+    </div>
+  `;
+
+  // ── 3. Gráfico mensal ─────────────────────────────────────────────────────
+  const byMonth = {};
+  vendidos
+    .filter(d => {
+      const ini = new Date(); ini.setDate(1); ini.setMonth(ini.getMonth() - 11);
+      const desde = ini.toLocaleDateString('sv-SE').slice(0, 7); // últimos 12 meses
+      return d.dataVenda && d.dataVenda.slice(0, 7) >= desde;
+    })
+    .forEach(d => {
+      const [y, m] = d.dataVenda.split('-');
+      const key = `${y}-${m}`;
+      if (!byMonth[key]) byMonth[key] = { lucro: 0, receita: 0, count: 0 };
+      byMonth[key].lucro += getLucro(d);
+      byMonth[key].receita += d.vendaLiquida || 0;
+      byMonth[key].count++;
+    });
+  const monthKeys = Object.keys(byMonth).sort();
+  const monthNames = { '01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez' };
+  const maxVal = Math.max(...monthKeys.map(k => byMonth[k].lucro), 1);
+  const minVal = Math.min(...monthKeys.map(k => byMonth[k].lucro), 0);
+  const range = maxVal - minVal || 1;
+  const chartH = 100;
+
+  if (monthKeys.length > 0) {
+    const bars = monthKeys.map(k => {
+      const { lucro, count } = byMonth[k];
+      const [y, m] = k.split('-');
+      const label = `${monthNames[m]}/${y.slice(2)}`;
+      const barH = Math.max((lucro - minVal) / range * chartH, 4).toFixed(1);
+      const isCur = k === new Date().toISOString().slice(0,7);
+      const colorSolid = lucro >= 0 ? '#1a6b35' : '#c0392b';
+      const colorDim   = lucro >= 0 ? '#a8d5b5' : '#f0a89e';
+      const barColor   = isCur ? colorSolid : colorDim;
+      const hoverColor = colorSolid;
+      const valLabel = (lucro >= 0 ? '+' : '') + lucro.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+      return `
+        <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:${colorSolid};white-space:nowrap;margin-bottom:4px;text-align:center" title="${fmt(lucro)}">${valLabel}</div>
+          <div title="${label}: ${fmt(lucro)} (${count} vendas)" style="width:100%;height:${barH}px;background:${barColor};border-radius:4px 4px 0 0;transition:background .15s;cursor:default" onmouseover="this.style.background='${hoverColor}'" onmouseout="this.style.background='${barColor}'"></div>
+          <div style="font-size:10px;color:${isCur ? colorSolid : 'var(--text3)'};white-space:nowrap;margin-top:6px;text-align:center;font-weight:${isCur?'600':'400'}">${label}</div>
+          <div style="font-size:9px;color:var(--text3);text-align:center">${count}v</div>
+        </div>`;
+    }).join('');
+    document.getElementById('monthly-chart').innerHTML = `<div style="display:flex;gap:6px;align-items:flex-end;padding-top:4px;width:100%">${bars}</div>`;
+  } else {
+    document.getElementById('monthly-chart').innerHTML = '<div style="color:var(--text3);font-size:13px;padding-top:12px">Nenhuma venda com data registrada.</div>';
+  }
+
+  // ── 4. Alerta de peças paradas ────────────────────────────────────────────
+  const alertDays = parseInt(document.getElementById('alert-days-select')?.value || 60);
+  const paradas = emEstoque
+    .map(d => {
+      const ref = d.dataRecebimento || d.dataCompra;
+      const dias = ref ? diffDays(new Date(ref), today) : null;
+      return {...d, diasParados: dias};
+    })
+    .filter(d => d.diasParados != null && d.diasParados > alertDays)
+    .sort((a,b) => b.diasParados - a.diasParados);
+
+  document.querySelector('#view-dashboard .dash-card h3 + select')?.parentElement.querySelector('h3')
+  document.getElementById('alert-list').innerHTML = paradas.length
+    ? paradas.slice(0,8).map(d => `
+        <div class="alert-item" onclick="openModal('${d.id}')">
+          <div>
+            <div class="ai-name">${d.item}</div>
+            <div class="ai-val">${d.expectativaVenda ? fmt(d.expectativaVenda) : 'sem expectativa'} · custo ${fmt(d.paguei)}</div>
+          </div>
+          <div class="ai-days">${d.diasParados}d</div>
+        </div>`).join('')
+      + (paradas.length > 8 ? `<div style="font-size:12px;color:var(--text3);padding-top:8px;text-align:center">+ ${paradas.length-8} outras peças paradas</div>` : '')
+    : `<div style="color:var(--text3);font-size:13px;padding-top:4px">✓ Nenhuma peça parada há mais de ${alertDays} dias</div>`;
+
+  // ── 5. Canal chart ────────────────────────────────────────────────────────
+  const byCanal = {};
+  data.filter(d => d.canalVenda && d.vendaLiquida).forEach(d => {
+    byCanal[d.canalVenda] = (byCanal[d.canalVenda]||0) + (d.vendaLiquida||0);
+  });
+  const canalEntries = Object.entries(byCanal).sort((a,b) => b[1]-a[1]);
+  const maxCanal = canalEntries[0]?.[1] || 1;
+  document.getElementById('canal-chart').innerHTML = canalEntries.map(([name, val]) => `
+    <div class="canal-row">
+      <div class="canal-name">${name}</div>
+      <div class="canal-bar-wrap"><div class="canal-bar" style="width:${(val/maxCanal*100).toFixed(1)}%"></div></div>
+      <div class="canal-val">${fmt(val)}</div>
+    </div>
+  `).join('');
+
+  // ── 6. Status grid ────────────────────────────────────────────────────────
+  const statusColors = { 'Estoque': '#448aff', 'Enviado': '#00e676', 'Logística': '#ffd600', 'Com o vendedor': '#ff9800' };
+  const byStatus = {};
+  data.forEach(d => { if (d.ondeEsta !== 'Patrimônio') byStatus[d.ondeEsta] = (byStatus[d.ondeEsta]||0)+1; });
+  document.getElementById('status-grid').innerHTML = Object.entries(byStatus).map(([s,c]) => `
+    <div class="status-chip">
+      <div class="name"><div class="dot" style="background:${statusColors[s]||'#888'}"></div>${s}</div>
+      <div class="count" style="color:${statusColors[s]||'#888'}">${c}</div>
+    </div>
+  `).join('');
+
+  // ── 7. Top lucro ──────────────────────────────────────────────────────────
+  const topLucro = vendidos.map(d => ({...d, lucro: getLucro(d)})).sort((a,b) => b.lucro-a.lucro).slice(0,10);
+  document.getElementById('top-lucro').innerHTML = topLucro.map(d => `
+    <div class="top-row">
+      <div class="item-name">${d.item}</div>
+      <div class="lucro ${d.lucro >= 0 ? 'lucro-pos' : 'lucro-neg'}">${fmt(d.lucro)}</div>
+    </div>
+  `).join('') || '<div style="color:var(--text3);font-size:13px;padding-top:12px">Nenhuma venda registrada</div>';
+
+  // ── 8. Recentes sem venda ─────────────────────────────────────────────────
+  const recent = [...emEstoque].sort((a,b) => (b.dataCompra||'').localeCompare(a.dataCompra||'')).slice(0,10);
+  document.getElementById('recent-estoque').innerHTML = recent.map(d => `
+    <div class="top-row">
+      <div class="item-name">${d.item}</div>
+      <div class="lucro lucro-na">${d.expectativaVenda ? fmt(d.expectativaVenda) : '—'}</div>
+    </div>
+  `).join('') || '<div style="color:var(--text3);font-size:13px;padding-top:12px">Estoque vazio</div>';
+
+  // ── 9. Gastos operacionais (widget mensal) ────────────────────────────────
+  await renderDashGastos(gastos);
+}
+
+// INVENTORY
+let filteredData = [];
+async function renderInventory() {
+  await filterInventory();
+}
+
+async function filterInventory() {
+  const data = (await getData()).filter(d => d.ondeEsta !== 'Patrimônio');
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const venda = document.getElementById('filter-venda').value;
+  
+  filteredData = data.filter(d => {
+    if (q && !d.item.toLowerCase().includes(q)) return false;
+    if (status && d.ondeEsta !== status) return false;
+    if (venda === 'vendido' && !d.dataVenda && !d.vendaLiquida) return false;
+    if (venda === 'nao-vendido' && (d.dataVenda || d.vendaLiquida)) return false;
+    return true;
+  });
+
+  // Sort
+  filteredData.sort((a,b) => {
+    let va = a[sortField], vb = b[sortField];
+    if (sortField === 'lucro') { va = getLucro(a); vb = getLucro(b); }
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === 'string') return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return sortAsc ? va - vb : vb - va;
+  });
+
+  document.getElementById('count-badge').textContent = `${filteredData.length} peças`;
+  currentPage = 1;
+  renderTable();
+}
+
+function sortBy(field) {
+  if (sortField === field) sortAsc = !sortAsc;
+  else { sortField = field; sortAsc = false; }
+  filterInventory();
+}
+
+function renderTable() {
+  const start = (currentPage-1)*PER_PAGE;
+  const page = filteredData.slice(start, start+PER_PAGE);
+  const fmt = v => v != null ? 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2}) : '—';
+  const fmtDate = d => d ? d.split('-').reverse().join('/') : '—';
+  
+  const badgeMap = {
+    'Estoque': 'badge-estoque', 'Enviado': 'badge-enviado',
+    'Logística': 'badge-logistica', 'Com o vendedor': 'badge-vendedor', 'Patrimônio': 'badge-patrimonio'
+  };
+
+  document.getElementById('inventory-body').innerHTML = page.map(d => {
+    const lucro = getLucro(d);
+    const lucroHtml = lucro != null ? `<span class="${lucro >= 0 ? 'lucro-pos' : 'lucro-neg'}">${fmt(lucro)}</span>` : '<span class="lucro-na">—</span>';
+    const meta = [d.ano, d.tamanho].filter(Boolean).join(' · ');
+    return `<tr onclick="openModal('${d.id}')">
+      <td class="item-name">${d.item}${meta ? `<div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">${meta}</div>` : ''}${d.trocaDe ? `<div class="inv-troca">⇄ troca por ${escAttr(d.origemTrocaNome || 'peça removida')}</div>` : ''}${d.trocasRecebidas && d.trocasRecebidas.length ? `<div class="inv-troca">⇄ ${d.trocasRecebidas.length} camisa${d.trocasRecebidas.length>1?'s':''} recebida${d.trocasRecebidas.length>1?'s':''} em troca</div>` : ''}</td>
+      <td class="mono">${fmtDate(d.dataCompra)}</td>
+      <td class="mono">${fmt(d.paguei)}</td>
+      <td class="mono">${d.expectativaVenda ? fmt(d.expectativaVenda) : '—'}</td>
+      <td class="mono">${fmtDate(d.dataVenda)}</td>
+      <td><span style="font-size:12px;color:var(--text2)">${d.canalVenda||'—'}</span></td>
+      <td class="mono">${fmt(d.vendaLiquida)}</td>
+      <td>${lucroHtml}</td>
+      <td><span class="badge ${badgeMap[d.ondeEsta]||''}">${d.ondeEsta}</span></td>
+    </tr>`;
+  }).join('');
+
+  renderPagination();
+}
+
+function renderPagination() {
+  const total = Math.ceil(filteredData.length / PER_PAGE);
+  if (total <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i-currentPage) <= 1) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i-currentPage) === 2) {
+      html += `<span style="color:var(--text3);padding:0 4px">…</span>`;
+    }
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goPage(p) {
+  const total = Math.ceil(filteredData.length / PER_PAGE);
+  if (p < 1 || p > total) return;
+  currentPage = p;
+  renderTable();
+}
+
+// ── TROCAS ──────────────────────────────────────────────────────────────────
+let _trocasSalvas = [];     // camisas já vinculadas a esta venda (vindas do banco)
+let _trocaEditIdx = null;   // índice em _trocaRows sendo editado no modal de troca
+
+function escAttr(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+const fmtBRL = v => 'R$ ' + Number(v || 0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+function totalTrocas() {
+  return _trocasSalvas.reduce((s,t) => s + (t.paguei||0), 0)
+       + _trocaRows.reduce((s,t) => s + (t.valor||0), 0);
+}
+
+function renderTrocaSection() {
+  const temTrocas = _trocasSalvas.length + _trocaRows.length > 0;
+  const dataVenda = document.getElementById('f-dataVenda').value;
+  document.getElementById('troca-section').style.display = (dataVenda || temTrocas) ? 'block' : 'none';
+  document.getElementById('lbl-vendaLiquida').textContent = temTrocas ? 'Venda Líquida em dinheiro (R$)' : 'Venda Líquida (R$)';
+  document.getElementById('lbl-vendaBruta').textContent = temTrocas ? 'Venda Bruta em dinheiro (R$)' : 'Venda Bruta (R$)';
+
+  const list = document.getElementById('troca-list');
+  const salvas = _trocasSalvas.map(t => `
+    <div class="troca-chip" onclick="abrirPecaVinculada('${t.id}')" title="Abrir esta camisa">
+      <span class="tc-icon">⇄</span>
+      <div class="tc-main">
+        <div class="tc-name">${escAttr(t.item)}</div>
+        <div class="tc-sub">${[t.ano, t.tamanho, t.ondeEsta].filter(Boolean).join(' · ')}${t.dataVenda ? ' · já vendida' : ''}</div>
+      </div>
+      <span class="tc-val">${fmtBRL(t.paguei)}</span>
+    </div>`).join('');
+  const pendentes = _trocaRows.map((t, i) => `
+    <div class="troca-chip" onclick="openTrocaModal(${i})" title="Editar">
+      <span class="tc-icon">⇄</span>
+      <div class="tc-main">
+        <div class="tc-name">${escAttr(t.item)}</div>
+        <div class="tc-sub">${[t.ano, t.tamanho].filter(Boolean).join(' · ')}${t.ano||t.tamanho ? ' · ' : ''}<span style="color:var(--yellow)">será criada ao salvar</span></div>
+      </div>
+      <span class="tc-val">${fmtBRL(t.valor)}</span>
+      <button type="button" class="tc-x" onclick="event.stopPropagation();removeTrocaRow(${i})" title="Remover">✕</button>
+    </div>`).join('');
+  list.innerHTML = salvas + pendentes;
+  document.getElementById('troca-empty').style.display = temTrocas ? 'none' : 'block';
+
+  const resumo = document.getElementById('troca-resumo');
+  if (!temTrocas) { resumo.innerHTML = ''; return; }
+  const dinheiro = parseFloat(document.getElementById('f-vendaLiquida').value) || 0;
+  const trocas = totalTrocas();
+  const total = dinheiro + trocas;
+  const custo = parseFloat(document.getElementById('f-paguei').value) || 0;
+  const expect = parseFloat(document.getElementById('f-expectativaVenda').value) || 0;
+  resumo.innerHTML = `<div class="troca-resumo">
+    <span>Dinheiro <b>${fmtBRL(dinheiro)}</b></span>
+    <span>+ Trocas <b>${fmtBRL(trocas)}</b></span>
+    <span>= Venda total <b style="color:var(--green)">${fmtBRL(total)}</b></span>
+    <span>Lucro <b style="color:${total-custo>=0?'var(--green)':'var(--red)'}">${fmtBRL(total - custo)}</b></span>
+    ${expect ? `<span>Expectativa <b>${fmtBRL(expect)}</b></span>` : ''}
+  </div>`;
+}
+
+function openTrocaModal(idx) {
+  _trocaEditIdx = (typeof idx === 'number') ? idx : null;
+  const t = _trocaEditIdx != null ? _trocaRows[_trocaEditIdx] : {};
+  document.getElementById('troca-modal-title').textContent = _trocaEditIdx != null ? 'Editar Camisa da Troca' : 'Camisa Recebida em Troca';
+  const nomeOrigem = document.getElementById('f-item').value.trim() || 'esta peça';
+  document.getElementById('troca-modal-origem').innerHTML = `Recebida como parte do pagamento de <b style="color:var(--text)">${escAttr(nomeOrigem)}</b>`;
+  document.getElementById('t-item').value = t.item || '';
+  document.getElementById('t-ano').value = t.ano || '';
+  document.getElementById('t-tamanho').value = t.tamanho || '';
+  document.getElementById('t-valor').value = t.valor != null ? t.valor : '';
+  document.getElementById('t-expectativa').value = t.expectativa != null ? t.expectativa : '';
+  document.getElementById('t-ondeEsta').value = t.ondeEsta || 'Estoque';
+
+  // Sugestão: quanto falta para chegar na expectativa da peça original
+  const expect = parseFloat(document.getElementById('f-expectativaVenda').value) || 0;
+  const dinheiro = parseFloat(document.getElementById('f-vendaLiquida').value) || 0;
+  const jaTrocas = totalTrocas() - (_trocaEditIdx != null ? (t.valor||0) : 0);
+  const falta = expect - dinheiro - jaTrocas;
+  document.getElementById('troca-modal-sugestao').innerHTML = expect && falta > 0
+    ? `Para chegar na expectativa de ${fmtBRL(expect)}, faltam <b style="color:var(--text)">${fmtBRL(falta)}</b> em trocas.`
+    : '';
+  document.getElementById('troca-modal').classList.add('open');
+  setTimeout(() => document.getElementById('t-item').focus(), 50);
+}
+
+function closeTrocaModal() {
+  document.getElementById('troca-modal').classList.remove('open');
+  _trocaEditIdx = null;
+}
+
+function confirmTroca() {
+  const item = document.getElementById('t-item').value.trim();
+  const valorStr = document.getElementById('t-valor').value;
+  if (!item) { showToast('Informe o nome da camisa', 'error'); return; }
+  if (valorStr === '') { showToast('Informe o valor pelo qual você pegou a camisa', 'error'); return; }
+  const t = {
+    item,
+    ano: document.getElementById('t-ano').value || '',
+    tamanho: document.getElementById('t-tamanho').value || '',
+    valor: parseFloat(valorStr) || 0,
+    expectativa: document.getElementById('t-expectativa').value !== '' ? parseFloat(document.getElementById('t-expectativa').value) : null,
+    ondeEsta: document.getElementById('t-ondeEsta').value,
+  };
+  if (_trocaEditIdx != null) _trocaRows[_trocaEditIdx] = t; else _trocaRows.push(t);
+  closeTrocaModal();
+  renderTrocaSection();
+}
+
+function removeTrocaRow(idx) {
+  _trocaRows.splice(idx, 1);
+  renderTrocaSection();
+}
+
+function abrirPecaVinculada(id) {
+  if (_trocaRows.length && !confirm('Há camisas de troca ainda não salvas nesta venda. Abrir outra peça vai descartá-las. Continuar?')) return;
+  closeModal();
+  openModal(id);
+}
+
+document.getElementById('troca-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeTrocaModal();
+});
+
+// MODAL
+async function openModal(id) {
+  editingId = id || null;
+  await applyConfig(); // garante selects atualizados
+  const data = await getData();
+  const item = id ? data.find(d => d.id === id) : null;
+  
+  document.getElementById('modal-title').textContent = item ? 'Editar Peça' : 'Nova Peça';
+  document.getElementById('btn-delete').style.display = item ? 'block' : 'none';
+  
+  if (item) {
+    document.getElementById('f-item').value = item.item || '';
+    document.getElementById('f-ano').value = item.ano || '';
+    document.getElementById('f-tamanho').value = item.tamanho || '';
+    document.getElementById('f-ondeEsta').value = item.ondeEsta || 'Estoque';
+    document.getElementById('f-rastreio').value = item.rastreio || '';
+    document.getElementById('f-dataCompra').value = item.dataCompra || '';
+    document.getElementById('f-dataRecebimento').value = item.dataRecebimento || '';
+    document.getElementById('f-paguei').value = item.paguei != null ? item.paguei : '';
+    document.getElementById('f-expectativaVenda').value = item.expectativaVenda || '';
+    document.getElementById('f-dataAnuncio').value = item.dataAnuncio || '';
+    document.getElementById('f-dataVenda').value = item.dataVenda || '';
+    document.getElementById('f-canalVenda').value = item.canalVenda || '';
+    const vb = 'vendaBrutaDinheiro' in item ? item.vendaBrutaDinheiro : item.vendaBruta;
+    const vl = 'vendaDinheiro' in item ? item.vendaDinheiro : item.vendaLiquida;
+    document.getElementById('f-vendaBruta').value = vb != null ? vb : '';
+    document.getElementById('f-vendaLiquida').value = vl != null ? vl : '';
+  } else {
+    document.getElementById('item-form').reset();
+  }
+  
+  // Trocas: camisas já vinculadas + etiqueta de origem
+  _trocaRows = [];
+  _trocasSalvas = item ? data.filter(d => d.trocaDe === item.id) : [];
+  const tag = document.getElementById('troca-origem-tag');
+  if (item && item.trocaDe) {
+    const origem = data.find(d => d.id === item.trocaDe);
+    tag.innerHTML = origem
+      ? `<span class="troca-tag" onclick="abrirPecaVinculada('${origem.id}')" title="Abrir a peça original">⇄ Recebida em troca por: ${escAttr(origem.item)}</span>`
+      : `<span class="troca-tag" style="cursor:default">⇄ Recebida em troca (peça original removida)</span>`;
+  } else tag.innerHTML = '';
+  renderTrocaSection();
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function updateTrocaSection() { renderTrocaSection(); }
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editingId = null;
+  _trocaRows = [];
+  _trocasSalvas = [];
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+async function saveItem() {
+  const itemName = document.getElementById('f-item').value.trim();
+  if (!itemName) { showToast('Nome da peça é obrigatório', 'error'); return; }
+  showLoading('Salvando peça...');
+  const paguei = parseFloat(document.getElementById('f-paguei').value) || 0;
+  const newItem = {
+    item: itemName,
+    ano: document.getElementById('f-ano').value ? parseInt(document.getElementById('f-ano').value) : null,
+    tamanho: document.getElementById('f-tamanho').value || null,
+    ondeEsta: document.getElementById('f-ondeEsta').value,
+    rastreio: document.getElementById('f-rastreio').value || null,
+    dataCompra: document.getElementById('f-dataCompra').value || null,
+    dataRecebimento: document.getElementById('f-dataRecebimento').value || null,
+    paguei: paguei,
+    expectativaVenda: parseFloat(document.getElementById('f-expectativaVenda').value) || null,
+    dataAnuncio: document.getElementById('f-dataAnuncio').value || null,
+    dataVenda: document.getElementById('f-dataVenda').value || null,
+    canalVenda: document.getElementById('f-canalVenda').value || null,
+    vendaBruta: document.getElementById('f-vendaBruta').value ? parseFloat(document.getElementById('f-vendaBruta').value) : null,
+    vendaLiquida: document.getElementById('f-vendaLiquida').value ? parseFloat(document.getElementById('f-vendaLiquida').value) : null,
+  };
+  try {
+    let savedId;
+    if (editingId) {
+      newItem.id = editingId;
+      await savePeca(newItem);
+      savedId = editingId;
+      showToast('Peça atualizada com sucesso!', 'success');
+    } else {
+      newItem.id = 'item_' + Date.now();
+      await savePeca(newItem);
+      savedId = newItem.id;
+      showToast('Peça cadastrada com sucesso!', 'success');
+    }
+
+    // Cria as camisas recebidas em troca, vinculadas a esta peça
+    if (_trocaRows.length > 0) {
+      const dataTroca = newItem.dataVenda || new Date().toLocaleDateString('sv-SE');
+      for (const t of _trocaRows) {
+        await savePeca({
+          id: 'item_troca_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+          item: t.item,
+          ano: t.ano ? parseInt(t.ano) : null,
+          tamanho: t.tamanho || null,
+          ondeEsta: t.ondeEsta || 'Estoque',
+          rastreio: null,
+          dataCompra: dataTroca,
+          dataRecebimento: dataTroca,
+          paguei: t.valor,                 // valor pego na troca = custo da camisa
+          expectativaVenda: t.expectativa,
+          dataAnuncio: null, dataVenda: null, canalVenda: null,
+          vendaBruta: null, vendaLiquida: null,
+          trocaDe: savedId,
+        });
+      }
+      showToast(`Venda salva + ${_trocaRows.length} camisa(s) de troca no estoque!`, 'success');
+    }
+
+    closeModal();
+    _pecasCache = null; // força reload
+    const activeView = document.querySelector('.view.active').id;
+    if (activeView === 'view-dashboard') await renderDashboard();
+    else await renderInventory();
+  } catch(e) {
+    if (String(e && e.message).includes('troca_de')) {
+      showToast('Falta criar a coluna troca_de no Supabase (veja o SQL que te passei).', 'error');
+    } else {
+      showToast('Erro ao salvar. Verifique a conexão.', 'error');
+    }
+    console.error(e);
+  } finally { hideLoading(); }
+}
+
+async function deleteItem() {
+  if (!editingId) return;
+  let aviso = 'Tem certeza que deseja excluir esta peça?';
+  const atual = (await getData()).find(d => d.id === editingId);
+  if (atual && atual.trocaDe && atual.origemTrocaNome) aviso += `\n\nEsta camisa entrou na troca por "${atual.origemTrocaNome}". A venda daquela peça vai diminuir ${fmtBRL(atual.paguei)}.`;
+  if (_trocasSalvas.length) aviso += `\n\nEla tem ${_trocasSalvas.length} camisa(s) recebida(s) em troca. Elas continuam no estoque, mas perdem o vínculo.`;
+  if (!confirm(aviso)) return;
+  showLoading('Excluindo...');
+  try {
+    await deletePeca(editingId);
+    closeModal();
+    showToast('Peça excluída', 'error');
+    const activeView = document.querySelector('.view.active').id;
+    if (activeView === 'view-dashboard') await renderDashboard();
+    else await renderInventory();
+  } catch(e) { showToast('Erro ao excluir.', 'error'); console.error(e); }
+  finally { hideLoading(); }
+}
+
+// GASTO MODAL
+async function openGastoModal(id) {
+  editingGastoId = id || null;
+  await applyConfig(); // garante selects de categoria atualizados
+  const gastos = await getGastos();
+  const gasto = id ? gastos.find(g => g.id === id) : null;
+  document.getElementById('gasto-modal-title').textContent = gasto ? 'Editar Gasto' : 'Novo Gasto Operacional';
+  document.getElementById('g-btn-delete').style.display = gasto ? 'block' : 'none';
+  if (gasto) {
+    document.getElementById('g-descricao').value = gasto.descricao || '';
+    document.getElementById('g-categoria').value = gasto.categoria || 'Outros';
+    document.getElementById('g-data').value = gasto.data || '';
+    document.getElementById('g-valor').value = gasto.valor != null ? gasto.valor : '';
+  } else {
+    document.getElementById('g-descricao').value = '';
+    document.getElementById('g-categoria').value = 'Outros';
+    document.getElementById('g-data').value = '';
+    document.getElementById('g-valor').value = '';
+  }
+  document.getElementById('gasto-modal').classList.add('open');
+}
+
+function closeGastoModal() {
+  document.getElementById('gasto-modal').classList.remove('open');
+  editingGastoId = null;
+}
+
+document.getElementById('gasto-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeGastoModal();
+});
+
+async function saveGasto() {
+  const desc = document.getElementById('g-descricao').value.trim();
+  if (!desc) { showToast('Descrição é obrigatória', 'error'); return; }
+  const valor = parseFloat(document.getElementById('g-valor').value);
+  if (!valor || valor <= 0) { showToast('Informe um valor válido', 'error'); return; }
+  showLoading('Salvando gasto...');
+  try {
+    const newGasto = {
+      id: editingGastoId || ('gasto_' + Date.now()),
+      descricao: desc,
+      categoria: document.getElementById('g-categoria').value,
+      data: document.getElementById('g-data').value || null,
+      valor: valor,
+    };
+    await saveGastoDB(newGasto);
+    showToast(editingGastoId ? 'Gasto atualizado!' : 'Gasto registrado!', 'success');
+    closeGastoModal();
+    const activeView = document.querySelector('.view.active')?.id;
+    if (activeView === 'view-gastos') await renderGastos();
+    else await renderDashboard();
+  } catch(e) { showToast('Erro ao salvar gasto.', 'error'); console.error(e); }
+  finally { hideLoading(); }
+}
+
+async function deleteGasto() {
+  if (!editingGastoId) return;
+  if (!confirm('Excluir este gasto?')) return;
+  showLoading('Excluindo...');
+  try {
+    await deleteGastoDb(editingGastoId);
+    closeGastoModal();
+    showToast('Gasto excluído', 'error');
+    const activeView2 = document.querySelector('.view.active')?.id;
+    if (activeView2 === 'view-gastos') await renderGastos();
+    else await renderDashboard();
+  } catch(e) { showToast('Erro ao excluir gasto.', 'error'); console.error(e); }
+  finally { hideLoading(); }
+}
+
+// BACKUP
+async function exportBackup() {
+  const data = await getData();
+  const gastos = await getGastos();
+  const hoje = new Date().toISOString().slice(0,10);
+  const backup = {
+    versao: '1.0',
+    exportadoEm: new Date().toISOString(),
+    pecas: data,
+    gastos: gastos,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `varal_acervo_backup_${hoje}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Backup salvo! ${data.length} peças + ${gastos.length} gastos.`, 'success');
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.pecas || !Array.isArray(backup.pecas)) {
+        showToast('Arquivo inválido. Selecione um backup do Varal Acervo.', 'error');
+        return;
+      }
+      if (!confirm(`Isso vai substituir todos os dados atuais por:\n• ${backup.pecas.length} peças\n• ${(backup.gastos||[]).length} gastos\n\nTem certeza?`)) {
+        event.target.value = '';
+        return;
+      }
+      showLoading('Importando dados para o banco...');
+      try {
+        for (const p of backup.pecas) { await sbUpsert('pecas', pecaToRow(p)); }
+        for (const g of (backup.gastos||[])) { await sbUpsert('gastos', gastoToRow(g)); }
+        _pecasCache = null; _gastosCache = null;
+        event.target.value = '';
+        showToast(`Importado! ${backup.pecas.length} peças restauradas.`, 'success');
+        const activeView = document.querySelector('.view.active').id;
+        if (activeView === 'view-dashboard') await renderDashboard();
+        else await renderInventory();
+      } finally { hideLoading(); }
+    } catch(err) {
+      showToast('Erro ao ler o arquivo. Verifique se é um backup válido.', 'error');
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── RELATÓRIOS ────────────────────────────────────────────────────────────────
+async function renderRelatorios() {
+  const data = (await getData()).filter(d => d.ondeEsta !== 'Patrimônio');
+  const gastos = await getGastos();
+  const vendidos = data.filter(d => isVendido(d) && d.dataVenda);
+
+  // Popular seletor de anos
+  const anos = [...new Set(vendidos.map(d => d.dataVenda.slice(0,4)))].sort().reverse();
+  const selAno = document.getElementById('rel-ano');
+  const anoAtual = selAno.value || anos[0] || new Date().getFullYear().toString();
+  selAno.innerHTML = anos.map(a => `<option value="${a}" ${a===anoAtual?'selected':''}>${a}</option>`).join('');
+
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const monthNames = {'01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'};
+
+  // Filtrar por ano selecionado
+  const doAno = vendidos.filter(d => d.dataVenda.startsWith(anoAtual));
+
+  // KPIs do ano
+  const receitaAno = doAno.reduce((s,d) => s+(d.vendaLiquida||0), 0);
+  const custoAno = doAno.reduce((s,d) => s+(d.paguei||0), 0);
+  const lucroAno = receitaAno - custoAno;
+  const gastosAno = gastos.filter(g => g.data && g.data.startsWith(anoAtual)).reduce((s,g) => s+(g.valor||0), 0);
+  const lucroLiqAno = lucroAno - gastosAno;
+  const margemAno = custoAno > 0 ? (lucroAno/custoAno*100).toFixed(1) : 0;
+
+  document.getElementById('rel-kpis').innerHTML = `
+    <div class="kpi ${lucroLiqAno>=0?'green':'red'}">
+      <div class="kpi-label">Lucro Líquido ${anoAtual}</div>
+      <div class="kpi-value ${lucroLiqAno>=0?'green':'red'}">${fmt(lucroLiqAno)}</div>
+      <div class="kpi-sub">Bruto: ${fmt(lucroAno)} · Gastos: ${fmt(gastosAno)}</div>
+    </div>
+    <div class="kpi yellow">
+      <div class="kpi-label">Receita ${anoAtual}</div>
+      <div class="kpi-value yellow">${fmt(receitaAno)}</div>
+      <div class="kpi-sub">${doAno.length} peças vendidas</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Melhor Mês</div>
+      <div class="kpi-value blue" style="font-size:24px">${(() => {
+        const byM = {}; doAno.forEach(d => { const m=d.dataVenda.slice(5,7); byM[m]=(byM[m]||0)+(d.vendaLiquida-(d.paguei||0)); });
+        const best = Object.entries(byM).sort((a,b)=>b[1]-a[1])[0];
+        return best ? monthNames[best[0]].slice(0,3) : '—';
+      })()}</div>
+      <div class="kpi-sub">maior lucro do ano</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">Margem Média ${anoAtual}</div>
+      <div class="kpi-value green">${margemAno}%</div>
+      <div class="kpi-sub">Custo total: ${fmt(custoAno)}</div>
+    </div>
+  `;
+
+  // Tabela mensal
+  const meses = [...new Set(doAno.map(d => d.dataVenda.slice(5,7)))].sort();
+  const tbody = document.getElementById('rel-tbody');
+  let totalRec=0,totalCusto=0,totalLucro=0,totalGastos=0,totalVendas=0;
+
+  // Popular seletor de meses no ranking
+  const selMes = document.getElementById('rel-ranking-mes');
+  const mesSel = selMes.value;
+  selMes.innerHTML = '<option value="">Ano todo</option>' + meses.map(m => `<option value="${m}" ${m===mesSel?'selected':''}>${monthNames[m]}</option>`).join('');
+
+  tbody.innerHTML = meses.map(m => {
+    const pcs = doAno.filter(d => d.dataVenda.slice(5,7) === m);
+    const rec = pcs.reduce((s,d) => s+(d.vendaLiquida||0), 0);
+    const cst = pcs.reduce((s,d) => s+(d.paguei||0), 0);
+    const lbr = rec - cst;
+    const gop = gastos.filter(g => g.data && g.data.startsWith(anoAtual+'-'+m)).reduce((s,g) => s+(g.valor||0), 0);
+    const llq = lbr - gop;
+    const mrg = cst > 0 ? (lbr/cst*100).toFixed(1) : '—';
+    totalRec+=rec; totalCusto+=cst; totalLucro+=lbr; totalGastos+=gop; totalVendas+=pcs.length;
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:12px;font-size:13px;font-weight:500">${monthNames[m]}</td>
+      <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;color:var(--text2)">${pcs.length}</td>
+      <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right">${fmt(rec)}</td>
+      <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;color:var(--red)">${fmt(cst)}</td>
+      <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;color:${lbr>=0?'var(--green)':'var(--red)'}">${fmt(lbr)}</td>
+      <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;color:var(--text2)">${mrg}%</td>
+      <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;color:var(--yellow)">${fmt(gop)}</td>
+      <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600;color:${llq>=0?'var(--green)':'var(--red)'}">${fmt(llq)}</td>
+    </tr>`;
+  }).join('') + `<tr style="border-top:2px solid var(--border2);background:var(--surface2)">
+    <td style="padding:12px;font-size:13px;font-weight:600">TOTAL</td>
+    <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600">${totalVendas}</td>
+    <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600">${fmt(totalRec)}</td>
+    <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600;color:var(--red)">${fmt(totalCusto)}</td>
+    <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600;color:${totalLucro>=0?'var(--green)':'var(--red)'}">${fmt(totalLucro)}</td>
+    <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600">${totalCusto>0?(totalLucro/totalCusto*100).toFixed(1):0}%</td>
+    <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600;color:var(--yellow)">${fmt(totalGastos)}</td>
+    <td style="padding:12px;font-size:12px;font-family:'DM Mono',monospace;text-align:right;font-weight:600;color:${(totalLucro-totalGastos)>=0?'var(--green)':'var(--red)'}">${fmt(totalLucro-totalGastos)}</td>
+  </tr>`;
+
+  // Ranking de peças
+  const mesFiltro = document.getElementById('rel-ranking-mes').value;
+  const pecasRanking = (mesFiltro ? doAno.filter(d => d.dataVenda.slice(5,7)===mesFiltro) : doAno)
+    .map(d => ({...d, lucro: (d.vendaLiquida||0)-(d.paguei||0)}))
+    .sort((a,b) => b.lucro-a.lucro).slice(0,15);
+  const maxL = Math.max(...pecasRanking.map(d=>d.lucro),1);
+  document.getElementById('rel-ranking').innerHTML = pecasRanking.map((d,i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);width:20px;text-align:right">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.item}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">${d.dataVenda ? d.dataVenda.split('-').reverse().join('/') : '—'} · ${d.canalVenda||'—'}</div>
+      </div>
+      <div style="width:140px;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div style="width:${Math.max(d.lucro/maxL*100,2).toFixed(1)}%;height:100%;background:${d.lucro>=0?'var(--green)':'var(--red)'};border-radius:3px"></div>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:${d.lucro>=0?'var(--green)':'var(--red)'};width:80px;text-align:right">${fmt(d.lucro)}</div>
+    </div>
+  `).join('') || '<div style="color:var(--text3);font-size:13px;padding:12px 0">Nenhuma venda no período.</div>';
+}
+
+async function exportRelatorio() {
+  const data = (await getData()).filter(d => d.ondeEsta !== 'Patrimônio');
+  const gastos = await getGastos();
+  const anoAtual = document.getElementById('rel-ano')?.value || new Date().getFullYear().toString();
+  const vendidos = data.filter(d => d.dataVenda && d.dataVenda.startsWith(anoAtual) && d.vendaLiquida != null);
+  const fmt2 = v => v != null ? Number(v).toFixed(2) : '';
+  const monthNames = {'01':'Janeiro','02':'Fevereiro','03':'Março','04':'Abril','05':'Maio','06':'Junho','07':'Julho','08':'Agosto','09':'Setembro','10':'Outubro','11':'Novembro','12':'Dezembro'};
+
+  // Build CSV
+  let csv = 'Mês;Vendas;Receita;Custo;Lucro Bruto;Margem %;Gastos Op;Lucro Líquido\n';
+  const meses = [...new Set(vendidos.map(d => d.dataVenda.slice(5,7)))].sort();
+  meses.forEach(m => {
+    const pcs = vendidos.filter(d => d.dataVenda.slice(5,7)===m);
+    const rec = pcs.reduce((s,d)=>s+(d.vendaLiquida||0),0);
+    const cst = pcs.reduce((s,d)=>s+(d.paguei||0),0);
+    const lbr = rec-cst;
+    const gop = gastos.filter(g=>g.data&&g.data.startsWith(anoAtual+'-'+m)).reduce((s,g)=>s+(g.valor||0),0);
+    const mrg = cst>0?(lbr/cst*100).toFixed(1):0;
+    csv += `${monthNames[m]};${pcs.length};${fmt2(rec)};${fmt2(cst)};${fmt2(lbr)};${mrg};${fmt2(gop)};${fmt2(lbr-gop)}
+`;
+  });
+  csv += '\nPeça;Data Venda;Canal;Custo;Venda Líquida;Lucro\n';
+  vendidos.sort((a,b)=>b.dataVenda.localeCompare(a.dataVenda)).forEach(d => {
+    csv += `${d.item};${d.dataVenda||''};${d.canalVenda||''};${fmt2(d.paguei)};${fmt2(d.vendaLiquida)};${fmt2((d.vendaLiquida||0)-(d.paguei||0))}\n`;
+  });
+
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `varal_acervo_relatorio_${anoAtual}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Relatório exportado!', 'success');
+}
+
+// ── METAS ─────────────────────────────────────────────────────────────────────
+let _metasCache = null;
+
+async function getMetas() {
+  if (_metasCache) return _metasCache;
+  const rows = await sbGet('metas');
+  const obj = {};
+  (rows || []).forEach(r => { obj[r.mes] = r.valor; });
+  _metasCache = obj;
+  return obj;
+}
+
+async function salvarMeta() {
+  const mes = document.getElementById('meta-mes').value;
+  const valor = parseFloat(document.getElementById('meta-valor').value);
+  if (!mes) { showToast('Selecione o mês', 'error'); return; }
+  if (!valor || valor <= 0) { showToast('Informe um valor válido', 'error'); return; }
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/metas?on_conflict=mes`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation'
+      },
+      body: JSON.stringify({ mes, valor })
+    });
+    if (!r.ok) throw new Error(await r.text());
+    _metasCache = null;
+    showToast(`Meta de ${mes} salva!`, 'success');
+    await renderMetas();
+  } catch(e) {
+    showToast('Erro ao salvar meta: ' + e.message, 'error');
+  }
+}
+
+async function renderMetas() {
+  const data = (await getData()).filter(d => d.ondeEsta !== 'Patrimônio');
+  const gastos = await getGastos();
+  const metas = await getMetas();
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  // Preenche mês atual no input se vazio
+  const metaMesInput = document.getElementById('meta-mes');
+  if (!metaMesInput.value) metaMesInput.value = new Date().toISOString().slice(0,7);
+
+  if (Object.keys(metas).length === 0) {
+    document.getElementById('metas-cards').innerHTML = '<div style="color:var(--text3);font-size:13px">Nenhuma meta definida ainda. Defina sua primeira meta acima!</div>';
+    return;
+  }
+
+  const cards = Object.entries(metas).sort((a,b) => b[0].localeCompare(a[0])).map(([mes, metaValor]) => {
+    const [ano, m] = mes.split('-');
+    const monthNames = {'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
+    const vendidos = data.filter(d => isVendido(d) && d.dataVenda.startsWith(mes));
+    const lucroMes = vendidos.reduce((s,d) => s + getLucro(d), 0);
+    const lucroLiq = lucroMes;
+    const pct = Math.min(lucroLiq / metaValor * 100, 100);
+    const pctDisplay = (lucroLiq / metaValor * 100).toFixed(1);
+    const cor = pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--yellow)' : 'var(--red)';
+    const hoje = new Date().toISOString().slice(0,7);
+    const isCurrent = mes === hoje;
+
+    return `
+      <div class="dash-card" style="position:relative${isCurrent?';border-color:var(--green)':''}">
+        ${isCurrent ? '<div style="position:absolute;top:16px;right:16px;font-size:10px;background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:4px;font-weight:600">MÊS ATUAL</div>' : ''}
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:16px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px">${monthNames[m]}/${ano.slice(2)}</div>
+          <div style="font-size:11px;color:var(--text3)">${vendidos.length} vendas</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:600;color:${cor}">${fmt(lucroLiq)}</div>
+          <div style="font-size:12px;color:var(--text3)">meta: ${fmt(metaValor)}</div>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:8px">
+          <div style="height:100%;width:${Math.max(pct,0).toFixed(1)}%;background:${cor};border-radius:4px;transition:width .5s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <div style="font-size:12px;color:${cor};font-family:'DM Mono',monospace;font-weight:600">${pctDisplay}% da meta</div>
+          <div style="font-size:11px;color:var(--text3)">${pct>=100 ? '✓ Meta atingida!' : 'faltam ' + fmt(metaValor - lucroLiq)}</div>
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between">
+          <div style="font-size:11px;color:var(--text3)">Lucro bruto: <span style="color:var(--text2);font-family:'DM Mono',monospace">${fmt(lucroMes)}</span></div>
+          <button onclick="deletarMeta('${mes}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;padding:0">× remover</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('metas-cards').innerHTML = cards;
+}
+
+async function deletarMeta(mes) {
+  if (!confirm(`Remover meta de ${mes}?`)) return;
+  const rows = await sbGet('metas');
+  const row = (rows || []).find(r => r.mes === mes);
+  if (row) await sbDelete('metas', row.id);
+  _metasCache = null;
+  await renderMetas();
+  showToast('Meta removida', 'error');
+}
+
+// ── WIDGET GASTOS NO DASHBOARD ────────────────────────────────────────────────
+async function renderDashGastos(gastos) {
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const mesAtual = new Date().toISOString().slice(0,7);
+  const monthNames = {'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
+  const catColors = {'Embalagem':'#448aff','Marketing':'#ff9800','Personalizações':'#ce93d8','Ferramentas':'#ffd600','Outros':'#888'};
+
+  // Agrupa por mês
+  const byMonth = {};
+  gastos.forEach(g => {
+    if (!g.data) return;
+    const key = g.data.slice(0,7);
+    if (!byMonth[key]) byMonth[key] = 0;
+    byMonth[key] += g.valor || 0;
+  });
+
+  const monthKeys = Object.keys(byMonth).sort();
+  if (monthKeys.length === 0) {
+    document.getElementById('dash-gastos-chart').innerHTML = '<div style="color:var(--text3);font-size:13px;padding-top:12px">Nenhum gasto com data registrada.</div>';
+    return;
+  }
+
+  const totalAcumulado = gastos.reduce((s,g) => s+(g.valor||0), 0);
+  const totalMesAtual = gastos.filter(g => g.data && g.data.startsWith(mesAtual)).reduce((s,g) => s+(g.valor||0), 0);
+  document.getElementById('dash-gastos-total').textContent = fmt(totalAcumulado);
+  document.getElementById('dash-gastos-mes').textContent = fmt(totalMesAtual);
+
+  // Gráfico
+  const maxVal = Math.max(...monthKeys.map(k => byMonth[k]), 1);
+  const chartH = 100;
+  const bars = monthKeys.map(k => {
+    const val = byMonth[k];
+    const [y, m] = k.split('-');
+    const label = `${monthNames[m]}/${y.slice(2)}`;
+    const barH = Math.max((val / maxVal * chartH), 4).toFixed(1);
+    const isCur = k === mesAtual;
+    const color = isCur ? 'var(--yellow)' : 'var(--yellow-dim)';
+    const borderColor = isCur ? 'var(--yellow)' : 'transparent';
+    return `
+      <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0">
+        <div style="height:${chartH}px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:100%">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--yellow);white-space:nowrap;margin-bottom:3px;text-align:center;overflow:hidden;text-overflow:ellipsis;width:100%;padding:0 2px">${val > 0 ? 'R$'+Math.round(val) : ''}</div>
+          <div title="${label}: ${fmt(val)}" style="width:calc(100% - 4px);height:${barH}px;background:${color};border:1px solid ${borderColor};border-radius:4px 4px 0 0;transition:opacity .15s;cursor:default" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'"></div>
+        </div>
+        <div style="font-size:10px;color:${isCur ? 'var(--yellow)' : 'var(--text3)'};white-space:nowrap;margin-top:5px;text-align:center;font-weight:${isCur?'600':'400'}">${label}</div>
+      </div>`;
+  }).join('');
+  document.getElementById('dash-gastos-chart').innerHTML = bars;
+
+  // Mini breakdown de categorias
+  const byCat = {};
+  gastos.forEach(g => { byCat[g.categoria||'Outros'] = (byCat[g.categoria||'Outros']||0) + (g.valor||0); });
+  const catEntries = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+  document.getElementById('dash-gastos-categorias').innerHTML = catEntries.map(([cat, val]) => {
+    const pct = totalAcumulado > 0 ? (val/totalAcumulado*100).toFixed(0) : 0;
+    const color = catColors[cat] || '#888';
+    return `
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:11px;color:var(--text2)">${cat}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)">${pct}%</span>
+          </div>
+          <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${color};border-radius:2px"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── ABA GASTOS COMPLETA ───────────────────────────────────────────────────────
+async function renderGastos() {
+  const gastos = await getGastos();
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const monthNames = {'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
+  const catColors = {'Embalagem':'#448aff','Marketing':'#ff9800','Personalizações':'#ce93d8','Ferramentas':'#ffd600','Outros':'#888'};
+
+  // Popula select de ano
+  const anos = [...new Set(gastos.filter(g=>g.data).map(g=>g.data.slice(0,4)))].sort().reverse();
+  const anoSel = document.getElementById('gastos-ano-sel');
+  const anoAtual = new Date().getFullYear().toString();
+  if (anoSel.options.length === 0) {
+    anos.forEach(a => { const o = new Option(a, a); anoSel.add(o); });
+    if (!anos.includes(anoAtual) && gastos.length > 0) { const o = new Option(anoAtual, anoAtual); anoSel.insertBefore(o, anoSel.firstChild); }
+    anoSel.value = anoAtual;
+  }
+  const anoFiltro = anoSel.value || anoAtual;
+  const gastosAno = gastos.filter(g => g.data && g.data.startsWith(anoFiltro));
+  const mesAtual = new Date().toISOString().slice(0,7);
+
+  // KPIs
+  const totalAno = gastosAno.reduce((s,g) => s+(g.valor||0), 0);
+  const totalMes = gastos.filter(g => g.data && g.data.startsWith(mesAtual)).reduce((s,g) => s+(g.valor||0), 0);
+  const ticketMedio = gastosAno.length > 0 ? totalAno / gastosAno.length : 0;
+  const byCatKpi = {};
+  gastosAno.forEach(g => { byCatKpi[g.categoria||'Outros'] = (byCatKpi[g.categoria||'Outros']||0)+(g.valor||0); });
+  const topCat = Object.entries(byCatKpi).sort((a,b) => b[1]-a[1])[0];
+
+  document.getElementById('gastos-kpis').innerHTML = `
+    <div class="kpi yellow">
+      <div class="kpi-label">Total ${anoFiltro}</div>
+      <div class="kpi-value yellow">${fmt(totalAno)}</div>
+      <div class="kpi-sub">${gastosAno.length} lançamentos</div>
+    </div>
+    <div class="kpi yellow">
+      <div class="kpi-label">Mês Atual</div>
+      <div class="kpi-value yellow">${fmt(totalMes)}</div>
+      <div class="kpi-sub">${gastos.filter(g => g.data && g.data.startsWith(mesAtual)).length} lançamentos</div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Ticket Médio por Gasto</div>
+      <div class="kpi-value blue">${fmt(ticketMedio)}</div>
+      <div class="kpi-sub">Média do período selecionado</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">Categoria que Mais Pesou</div>
+      <div class="kpi-value red" style="font-size:22px">${topCat ? topCat[0] : '—'}</div>
+      <div class="kpi-sub">${topCat ? fmt(topCat[1]) + ' · ' + (totalAno > 0 ? (topCat[1]/totalAno*100).toFixed(0) : 0) + '% do total' : 'Nenhum gasto'}</div>
+    </div>
+  `;
+
+  // Gráfico mensal completo
+  const byMonth = {};
+  gastosAno.forEach(g => {
+    if (!g.data) return;
+    const key = g.data.slice(0,7);
+    if (!byMonth[key]) byMonth[key] = { total: 0, cats: {} };
+    byMonth[key].total += g.valor||0;
+    const cat = g.categoria||'Outros';
+    byMonth[key].cats[cat] = (byMonth[key].cats[cat]||0) + (g.valor||0);
+  });
+  const monthKeys = Object.keys(byMonth).sort();
+  const maxVal = Math.max(...monthKeys.map(k => byMonth[k].total), 1);
+  const chartH = 120;
+  const bars = monthKeys.length > 0 ? monthKeys.map(k => {
+    const { total } = byMonth[k];
+    const [y, m] = k.split('-');
+    const label = `${monthNames[m]}/${y.slice(2)}`;
+    const barH = Math.max((total/maxVal*chartH), 4).toFixed(1);
+    const isCur = k === mesAtual;
+    return `
+      <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0">
+        <div style="height:${chartH}px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:100%">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--yellow);white-space:nowrap;margin-bottom:3px;text-align:center;overflow:hidden;text-overflow:ellipsis;width:100%;padding:0 2px">${fmt(total)}</div>
+          <div title="${label}: ${fmt(total)}" style="width:calc(100% - 4px);height:${barH}px;background:${isCur?'var(--yellow)':'#b07d0044'};border:1px solid ${isCur?'var(--yellow)':'transparent'};border-radius:4px 4px 0 0;transition:background .15s;cursor:default" onmouseover="this.style.background='var(--yellow)'" onmouseout="this.style.background='${isCur?'var(--yellow)':'#b07d0044'}'"></div>
+        </div>
+        <div style="font-size:10px;color:${isCur?'var(--yellow)':'var(--text3)'};white-space:nowrap;margin-top:5px;text-align:center;font-weight:${isCur?'600':'400'}">${label}</div>
+        <div style="font-size:9px;color:var(--text3);text-align:center">${(byMonth[k].cats ? Object.values(byMonth[k].cats).reduce((s,v)=>s+(v>0?1:0),0) : 0)}g</div>
+      </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:13px;padding-top:12px">Nenhum gasto com data no período.</div>';
+  document.getElementById('gastos-chart-full').innerHTML = bars;
+
+  // Breakdown por categoria
+  const byCat = {};
+  gastosAno.forEach(g => { byCat[g.categoria||'Outros'] = (byCat[g.categoria||'Outros']||0)+(g.valor||0); });
+  const catEntries = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+  const maxCat = catEntries[0]?.[1] || 1;
+  document.getElementById('gastos-cat-breakdown').innerHTML = catEntries.length ? catEntries.map(([cat, val]) => {
+    const pct = totalAno > 0 ? (val/totalAno*100).toFixed(1) : 0;
+    const color = catColors[cat] || '#888';
+    const count = gastosAno.filter(g => (g.categoria||'Outros') === cat).length;
+    return `
+      <div class="canal-row" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:8px;width:130px;flex-shrink:0">
+          <div style="width:8px;height:8px;border-radius:50%;background:${color}"></div>
+          <span class="canal-name" style="width:auto">${cat}</span>
+        </div>
+        <div class="canal-bar-wrap"><div class="canal-bar" style="width:${(val/maxCat*100).toFixed(1)}%;background:${color}"></div></div>
+        <div style="text-align:right;min-width:80px">
+          <div class="canal-val">${fmt(val)}</div>
+          <div style="font-size:10px;color:var(--text3)">${pct}% · ${count}x</div>
+        </div>
+      </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:13px">Nenhum gasto no período.</div>';
+
+  // Select de mês para top gastos
+  const mesesSel = document.getElementById('gastos-mes-sel');
+  const mesesDisponiveis = [...new Set(gastosAno.filter(g=>g.data).map(g=>g.data.slice(0,7)))].sort().reverse();
+  const mesesFiltroSel = document.getElementById('gastos-filtro-mes');
+  // Só repopula se mudou o ano
+  if (mesesSel.dataset.ano !== anoFiltro) {
+    mesesSel.dataset.ano = anoFiltro;
+    mesesSel.innerHTML = '<option value="">Ano todo</option>';
+    mesesDisponiveis.forEach(m => { const [y,mo] = m.split('-'); mesesSel.add(new Option(`${monthNames[mo]}/${y.slice(2)}`, m)); });
+    mesesFiltroSel.innerHTML = '<option value="">Todos os meses</option>';
+    mesesDisponiveis.forEach(m => { const [y,mo] = m.split('-'); mesesFiltroSel.add(new Option(`${monthNames[mo]}/${y.slice(2)}`, m)); });
+  }
+
+  renderGastosTopLista(gastosAno, fmt, catColors);
+  renderGastosLista();
+}
+
+function renderGastosTopLista(gastosAno, fmt, catColors) {
+  const catC = catColors || {'Embalagem':'#448aff','Marketing':'#ff9800','Personalizações':'#ce93d8','Ferramentas':'#ffd600','Outros':'#888'};
+  const f = fmt || (v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2}));
+  const mesFiltro = document.getElementById('gastos-mes-sel')?.value || '';
+  const lista = mesFiltro ? gastosAno.filter(g => g.data && g.data.startsWith(mesFiltro)) : gastosAno;
+  const top = [...lista].sort((a,b) => (b.valor||0)-(a.valor||0)).slice(0,8);
+  document.getElementById('gastos-top-list').innerHTML = top.length ? top.map(g => {
+    const color = catC[g.categoria||'Outros'] || '#888';
+    return `
+      <div class="top-row" style="cursor:pointer" onclick="openGastoModal('${g.id}')">
+        <div style="flex:1;min-width:0">
+          <div class="item-name">${g.descricao}</div>
+          <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px">${g.data ? g.data.split('-').reverse().join('/') : '—'} · <span style="color:${color}">${g.categoria||'Outros'}</span></div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--yellow);flex-shrink:0">${f(g.valor||0)}</div>
+      </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:13px;padding-top:12px">Nenhum gasto no período.</div>';
+}
+
+async function renderGastosLista() {
+  const gastos = await getGastos();
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const catColors = {'Embalagem':'#448aff','Marketing':'#ff9800','Personalizações':'#ce93d8','Ferramentas':'#ffd600','Outros':'#888'};
+  const catFiltro = document.getElementById('gastos-filtro-cat')?.value || '';
+  const mesFiltro = document.getElementById('gastos-filtro-mes')?.value || '';
+  const anoFiltro = document.getElementById('gastos-ano-sel')?.value || new Date().getFullYear().toString();
+
+  let lista = gastos.filter(g => g.data && g.data.startsWith(anoFiltro));
+  if (catFiltro) lista = lista.filter(g => (g.categoria||'Outros') === catFiltro);
+  if (mesFiltro) lista = lista.filter(g => g.data && g.data.startsWith(mesFiltro));
+  lista = [...lista].sort((a,b) => (b.data||'').localeCompare(a.data||''));
+
+  const totalFiltrado = lista.reduce((s,g) => s+(g.valor||0), 0);
+  document.getElementById('gastos-count').textContent = `${lista.length} lançamentos · ${fmt(totalFiltrado)}`;
+
+  document.getElementById('gastos-lista-completa').innerHTML = lista.length ? `
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr>
+          <th style="text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Descrição</th>
+          <th style="text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Categoria</th>
+          <th style="text-align:left;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Data</th>
+          <th style="text-align:right;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:0 12px 12px;font-weight:500;border-bottom:1px solid var(--border)">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${lista.map(g => {
+          const color = catColors[g.categoria||'Outros'] || '#888';
+          return `<tr style="border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''" onclick="openGastoModal('${g.id}')">
+            <td style="padding:12px;font-size:13px;font-weight:500">${g.descricao}</td>
+            <td style="padding:12px"><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:${color}22;color:${color}">${g.categoria||'Outros'}</span></td>
+            <td style="padding:12px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${g.data ? g.data.split('-').reverse().join('/') : '—'}</td>
+            <td style="padding:12px;font-family:'DM Mono',monospace;font-size:13px;color:var(--yellow);text-align:right">${fmt(g.valor||0)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>` : '<div style="color:var(--text3);font-size:13px;padding:20px 0">Nenhum lançamento encontrado.</div>';
+}
+
+// ── CONFIGURAÇÕES ─────────────────────────────────────────────────────────────
+let _configCache = null;
+
+async function getConfig() {
+  if (_configCache) return _configCache;
+  const [canaisRows, catsRows] = await Promise.all([
+    sbGet('canais_venda'),
+    sbGet('categorias_gasto'),
+  ]);
+  _configCache = {
+    nomeLoja: localStorage.getItem('cfg_nomeLoja') || 'VARAL ACERVO',
+    canais: canaisRows.map(r => r.nome),
+    cats:   catsRows.map(r => r.nome),
+  };
+  return _configCache;
+}
+
+async function sbInsert(table, row) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json', Prefer: 'return=representation'
+    },
+    body: JSON.stringify(row)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function sbDeleteWhere(table, field, value) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${field}=eq.${encodeURIComponent(value)}`, {
+    method: 'DELETE',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+async function applyConfig() {
+  const cfg = await getConfig();
+  const logoEl = document.querySelector('.logo');
+  if (logoEl) logoEl.textContent = cfg.nomeLoja;
+  const selectsCanal = document.querySelectorAll('#f-canalVenda');
+  selectsCanal.forEach(sel => {
+    const val = sel.value;
+    sel.innerHTML = '<option value="">—</option>' + cfg.canais.map(c => `<option value="${c}"${c===val?' selected':''}>${c}</option>`).join('');
+  });
+  const selectsCat = document.querySelectorAll('#g-categoria, #gastos-filtro-cat');
+  selectsCat.forEach(sel => {
+    const val = sel.value;
+    const extras = sel.id === 'gastos-filtro-cat' ? '<option value="">Todas as categorias</option>' : '';
+    sel.innerHTML = extras + cfg.cats.map(c => `<option value="${c}"${c===val?' selected':''}>${c}</option>`).join('');
+  });
+}
+
+let _cfgCanaisTemp = [];
+let _cfgCatsTemp   = [];
+
+async function openSettings() {
+  const cfg = await getConfig();
+  _cfgCanaisTemp = [...cfg.canais];
+  _cfgCatsTemp   = [...cfg.cats];
+  document.getElementById('cfg-nome-loja').value = cfg.nomeLoja;
+  renderSettingsTags();
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+
+function renderSettingsTags() {
+  const renderTags = (containerId, list, isCanal) => {
+    document.getElementById(containerId).innerHTML = list.map((item, i) => {
+      return `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px">
+        <span>${item}</span>
+        <button onclick="${isCanal ? 'removerCanal' : 'removerCategoria'}(${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;line-height:1;padding:0" title="Remover">×</button>
+      </div>`;
+    }).join('');
+  };
+  renderTags('cfg-canais-list', _cfgCanaisTemp, true);
+  renderTags('cfg-cats-list',   _cfgCatsTemp,   false);
+}
+
+function adicionarCanal() {
+  const inp = document.getElementById('cfg-novo-canal');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (_cfgCanaisTemp.map(c=>c.toLowerCase()).includes(val.toLowerCase())) { showToast('Canal já existe', 'error'); return; }
+  _cfgCanaisTemp.push(val);
+  inp.value = '';
+  renderSettingsTags();
+}
+
+function adicionarCategoria() {
+  const inp = document.getElementById('cfg-nova-cat');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (_cfgCatsTemp.map(c=>c.toLowerCase()).includes(val.toLowerCase())) { showToast('Categoria já existe', 'error'); return; }
+  _cfgCatsTemp.push(val);
+  inp.value = '';
+  renderSettingsTags();
+}
+
+function removerCanal(i) {
+  _cfgCanaisTemp.splice(i, 1);
+  renderSettingsTags();
+}
+
+function removerCategoria(i) {
+  _cfgCatsTemp.splice(i, 1);
+  renderSettingsTags();
+}
+
+async function saveSettings() {
+  const nome = document.getElementById('cfg-nome-loja').value.trim() || 'VARAL ACERVO';
+  showLoading('Salvando configurações...');
+  try {
+    localStorage.setItem('cfg_nomeLoja', nome);
+
+    const canaisAtuais = (await sbGet('canais_venda')).map(r => r.nome);
+    const canaisAdicionar = _cfgCanaisTemp.filter(c => !canaisAtuais.includes(c));
+    const canaisRemover   = canaisAtuais.filter(c => !_cfgCanaisTemp.includes(c));
+    for (const n of canaisAdicionar) await sbInsert('canais_venda', { nome: n });
+    for (const n of canaisRemover)   await sbDeleteWhere('canais_venda', 'nome', n);
+
+    const catsAtuais = (await sbGet('categorias_gasto')).map(r => r.nome);
+    const catsAdicionar = _cfgCatsTemp.filter(c => !catsAtuais.includes(c));
+    const catsRemover   = catsAtuais.filter(c => !_cfgCatsTemp.includes(c));
+    for (const n of catsAdicionar) await sbInsert('categorias_gasto', { nome: n });
+    for (const n of catsRemover)   await sbDeleteWhere('categorias_gasto', 'nome', n);
+
+    _configCache = null;
+    await applyConfig();
+    closeSettings();
+    showToast('Configurações salvas!', 'success');
+  } catch(e) {
+    showToast('Erro ao salvar: ' + e.message, 'error');
+    console.error(e);
+  } finally {
+    hideLoading();
+  }
+}
+
+// TOAST
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type||'');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// REALTIME — escuta mudanças no banco e atualiza a tela automaticamente
+function initRealtime() {
+  const wsUrl = SUPABASE_URL.replace('https://', 'wss://') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+  let ws;
+  let heartbeat;
+  let reconnectTimer;
+
+  function connect() {
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      // Inscreve nas mudanças da tabela pecas
+      ws.send(JSON.stringify({
+        topic: 'realtime:public:pecas',
+        event: 'phx_join',
+        payload: { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'pecas' }] } },
+        ref: '1'
+      }));
+      // Inscreve nas mudanças da tabela gastos
+      ws.send(JSON.stringify({
+        topic: 'realtime:public:gastos',
+        event: 'phx_join',
+        payload: { config: { postgres_changes: [{ event: '*', schema: 'public', table: 'gastos' }] } },
+        ref: '2'
+      }));
+      // Heartbeat a cada 30s para manter conexão viva
+      heartbeat = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ topic: 'phoenix', event: 'heartbeat', payload: {}, ref: null }));
+        }
+      }, 30000);
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        // Qualquer INSERT, UPDATE ou DELETE nas tabelas pecas ou gastos
+        if (msg.event === 'postgres_changes' || (msg.payload && msg.payload.data && msg.payload.data.table)) {
+          const table = msg.payload?.data?.table || msg.payload?.table;
+          if (table === 'pecas' || table === 'gastos') {
+            // Invalida cache e re-renderiza silenciosamente
+            if (table === 'pecas') _pecasCache = null;
+            if (table === 'gastos') _gastosCache = null;
+            const activeView = document.querySelector('.view.active')?.id;
+            if (activeView === 'view-dashboard') renderDashboard();
+            else if (activeView === 'view-inventory') renderInventory();
+            else if (activeView === 'view-gastos') renderGastos();
+          }
+        }
+      } catch(err) {}
+    };
+
+    ws.onclose = () => {
+      clearInterval(heartbeat);
+      // Tenta reconectar após 5 segundos
+      reconnectTimer = setTimeout(connect, 5000);
+    };
+
+    ws.onerror = () => ws.close();
+  }
+
+  connect();
+}
+
+// INIT
+(async () => {
+  if (!SUPABASE_CONFIGURADO) {
+    document.body.insertAdjacentHTML('afterbegin', `
+      <div style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px">
+        <div style="background:#fff;border-radius:14px;max-width:460px;padding:28px 30px;font-family:'DM Sans',sans-serif;color:#1a1a1a;line-height:1.5">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;margin-bottom:8px">Falta conectar o banco de dados</div>
+          <p style="font-size:14px;margin:0 0 10px">Abra o arquivo <b>index.html</b> no GitHub, procure por <b>COLE_AQUI</b> e troque pelos dados do seu projeto no Supabase:</p>
+          <p style="font-size:13px;margin:0;color:#555">• <b>SUPABASE_URL</b>: a Project URL<br>• <b>SUPABASE_KEY</b>: a Publishable key</p>
+        </div>
+      </div>`);
+    return;
+  }
+  showLoading("Conectando ao banco de dados...");
+  await renderDashboard();
+  await applyConfig();
+  hideLoading();
+  initRealtime();
+})();
+</script>
+</body>
+</html>
